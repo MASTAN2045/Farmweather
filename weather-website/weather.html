@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Advisory - FarmWeather</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: url('https://images.unsplash.com/photo-1560493676-04071c5f467b?ixlib=rb-4.0.3') center/cover fixed;
+            color: #333;
+        }
+
+        .container {
+            min-height: 100vh;
+            background: rgba(255, 255, 255, 0.9);
+            padding-top: 80px;
+        }
+
+        nav {
+            background: #2e7d32;
+            padding: 1rem 2rem;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            color: white;
+            font-size: 1.8rem;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.3s;
+        }
+
+        .nav-links a:hover {
+            opacity: 0.8;
+        }
+
+        .profile-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .profile-icon {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #2e7d32;
+            font-size: 1.2rem;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background: white;
+            min-width: 160px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .dropdown-content a {
+            color: #333 !important;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .dropdown-content a:hover {
+            background: #f5f5f5;
+            opacity: 1 !important;
+        }
+
+        .profile-dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        .weather-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 2rem;
+        }
+
+        .location-search {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .search-fields {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .search-input {
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .search-button {
+            padding: 0.8rem 2rem;
+            background: #2e7d32;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .search-button:hover {
+            background: #1b5e20;
+        }
+
+        .current-weather {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .weather-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .weather-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+        }
+
+        .weather-item {
+            text-align: center;
+            padding: 1.5rem;
+            background: #f5f5f5;
+            border-radius: 10px;
+        }
+
+        .weather-item i {
+            font-size: 2rem;
+            color: #2e7d32;
+            margin-bottom: 1rem;
+        }
+
+        .forecast {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .forecast-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .forecast-card {
+            background: #f5f5f5;
+            padding: 1.5rem;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .forecast-card h3 {
+            color: #2e7d32;
+            margin-bottom: 1rem;
+        }
+
+        .advisory {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .advisory h2 {
+            color: #2e7d32;
+            margin-bottom: 1.5rem;
+        }
+
+        .advisory-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .advisory-item {
+            background: #f5f5f5;
+            padding: 1.5rem;
+            border-radius: 10px;
+        }
+
+        .advisory-item h3 {
+            color: #2e7d32;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        footer {
+            background: #1b5e20;
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <a href="home.html" class="logo">FarmWeather</a>
+            <div class="nav-links">
+                <a href="home.html">Home</a>
+                <a href="weather.html">Weather</a>
+                <a href="crops.html">Crops</a>
+                <a href="assistant.html">Farm AI</a>
+                <div class="profile-dropdown">
+                    <div class="profile-icon">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="dropdown-content">
+                        <a href="profile.html"><i class="fas fa-user-circle"></i> Profile</a>
+                        <a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="weather-container">
+            <div class="location-search">
+                <div class="search-fields">
+                    <select id="countrySelect" class="search-input">
+                        <option value="">Select Country</option>
+                        <option value="IN">India</option>
+                        <option value="US">United States</option>
+                        <option value="UK">United Kingdom</option>
+                        <option value="AU">Australia</option>
+                    </select>
+                    <select id="stateSelect" class="search-input" disabled>
+                        <option value="">Select State</option>
+                    </select>
+                    <input type="text" id="cityInput" placeholder="Enter City" class="search-input">
+                    <button class="search-button">Get Weather</button>
+                </div>
+            </div>
+
+            <div class="current-weather">
+                <div class="weather-header">
+                    <h2>Current Weather</h2>
+                    <p id="location">Location: --</p>
+                </div>
+                <div class="weather-info">
+                    <div class="weather-item">
+                        <i class="fas fa-temperature-high"></i>
+                        <h3>Temperature</h3>
+                        <p id="temperature">--°C</p>
+                    </div>
+                    <div class="weather-item">
+                        <i class="fas fa-tint"></i>
+                        <h3>Humidity</h3>
+                        <p id="humidity">--%</p>
+                    </div>
+                    <div class="weather-item">
+                        <i class="fas fa-wind"></i>
+                        <h3>Wind Speed</h3>
+                        <p id="wind">-- km/h</p>
+                    </div>
+                    <div class="weather-item">
+                        <i class="fas fa-cloud-rain"></i>
+                        <h3>Rainfall</h3>
+                        <p id="rainfall">-- mm</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="forecast">
+                <h2>5-Day Forecast</h2>
+                <div class="forecast-grid" id="forecastGrid">
+                    <!-- Forecast cards will be added here -->
+                </div>
+            </div>
+
+            <div class="advisory">
+                <h2>Farming Advisory</h2>
+                <div class="advisory-list">
+                    <div class="advisory-item">
+                        <h3><i class="fas fa-seedling"></i> Crop Protection</h3>
+                        <p id="cropProtection">Loading advisory...</p>
+                    </div>
+                    <div class="advisory-item">
+                        <h3><i class="fas fa-tint"></i> Irrigation</h3>
+                        <p id="irrigation">Loading advisory...</p>
+                    </div>
+                    <div class="advisory-item">
+                        <h3><i class="fas fa-bug"></i> Pest Control</h3>
+                        <p id="pestControl">Loading advisory...</p>
+                    </div>
+                    <div class="advisory-item">
+                        <h3><i class="fas fa-calendar-alt"></i> Planning</h3>
+                        <p id="planning">Loading advisory...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 FarmWeather. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // Country and State data
+        const statesByCountry = {
+            'IN': [
+                'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
+                'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka',
+                'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram',
+                'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu',
+                'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal'
+            ],
+            'US': [
+                'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado',
+                'Connecticut', 'Delaware', 'Florida', 'Georgia', 'Hawaii', 'Idaho',
+                'Illinois', 'Indiana', 'Iowa', 'Kansas', 'Kentucky', 'Louisiana',
+                'Maine', 'Maryland', 'Massachusetts', 'Michigan', 'Minnesota',
+                'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada',
+                'New Hampshire', 'New Jersey', 'New Mexico', 'New York',
+                'North Carolina', 'North Dakota', 'Ohio', 'Oklahoma', 'Oregon',
+                'Pennsylvania', 'Rhode Island', 'South Carolina', 'South Dakota',
+                'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia', 'Washington',
+                'West Virginia', 'Wisconsin', 'Wyoming'
+            ],
+            'UK': [
+                'England', 'Scotland', 'Wales', 'Northern Ireland'
+            ],
+            'AU': [
+                'New South Wales', 'Victoria', 'Queensland', 'Western Australia',
+                'South Australia', 'Tasmania', 'Australian Capital Territory',
+                'Northern Territory'
+            ]
+        };
+
+        // Handle country selection
+        const countrySelect = document.getElementById('countrySelect');
+        const stateSelect = document.getElementById('stateSelect');
+
+        countrySelect.addEventListener('change', () => {
+            const country = countrySelect.value;
+            stateSelect.innerHTML = '<option value="">Select State</option>';
+            stateSelect.disabled = !country;
+
+            if (country && statesByCountry[country]) {
+                statesByCountry[country].forEach(state => {
+                    const option = document.createElement('option');
+                    option.value = state;
+                    option.textContent = state;
+                    stateSelect.appendChild(option);
+                });
+            }
+        });
+
+        // Sample weather data for demonstration
+        const mockWeatherData = {
+            current: {
+                temperature: 28,
+                humidity: 65,
+                windSpeed: 12,
+                rainfall: 0
+            },
+            forecast: [
+                { day: 'Monday', temp: 28, condition: 'Sunny', icon: 'sun' },
+                { day: 'Tuesday', temp: 27, condition: 'Partly Cloudy', icon: 'cloud-sun' },
+                { day: 'Wednesday', temp: 25, condition: 'Rain', icon: 'cloud-rain' },
+                { day: 'Thursday', temp: 26, condition: 'Cloudy', icon: 'cloud' },
+                { day: 'Friday', temp: 29, condition: 'Sunny', icon: 'sun' }
+            ],
+            advisory: {
+                cropProtection: "Based on the forecast, consider applying fungicide as humidity levels are high. Cover sensitive crops if temperature drops below 20°C.",
+                irrigation: "Light rainfall expected in 2 days. Adjust irrigation schedule accordingly. Focus on water conservation.",
+                pestControl: "Current weather conditions favor pest development. Monitor crops closely and consider preventive measures.",
+                planning: "Ideal conditions for soil preparation and sowing of seasonal crops. Plan harvesting before expected rainfall."
+            }
+        };
+
+        function updateWeatherDisplay(data) {
+            // Update current weather
+            document.getElementById('temperature').textContent = `${data.current.temperature}°C`;
+            document.getElementById('humidity').textContent = `${data.current.humidity}%`;
+            document.getElementById('wind').textContent = `${data.current.windSpeed} km/h`;
+            document.getElementById('rainfall').textContent = `${data.current.rainfall} mm`;
+
+            // Update forecast
+            const forecastGrid = document.getElementById('forecastGrid');
+            forecastGrid.innerHTML = '';
+            data.forecast.forEach(day => {
+                const card = document.createElement('div');
+                card.className = 'forecast-card';
+                card.innerHTML = `
+                    <h3>${day.day}</h3>
+                    <i class="fas fa-${day.icon}"></i>
+                    <p>${day.temp}°C</p>
+                    <p>${day.condition}</p>
+                `;
+                forecastGrid.appendChild(card);
+            });
+
+            // Update advisory
+            document.getElementById('cropProtection').textContent = data.advisory.cropProtection;
+            document.getElementById('irrigation').textContent = data.advisory.irrigation;
+            document.getElementById('pestControl').textContent = data.advisory.pestControl;
+            document.getElementById('planning').textContent = data.advisory.planning;
+        }
+
+        // Handle search
+        document.querySelector('.search-button').addEventListener('click', () => {
+            const country = countrySelect.value;
+            const state = stateSelect.value;
+            const city = document.getElementById('cityInput').value;
+
+            if (!country || !state || !city) {
+                alert('Please select country, state and enter city');
+                return;
+            }
+
+            document.getElementById('location').textContent = `Location: ${city}, ${state}, ${country}`;
+            updateWeatherDisplay(mockWeatherData);
+        });
+
+        // Initialize with mock data
+        updateWeatherDisplay(mockWeatherData);
+
+        // Authentication check
+        function checkAuth() {
+            const currentUser = localStorage.getItem('currentUser');
+            if (!currentUser) {
+                window.location.href = 'login.html';
+            }
+        }
+
+        // Check authentication on page load
+        window.addEventListener('load', checkAuth);
+
+        // Add logout function
+        function logout() {
+            localStorage.removeItem('currentUser');
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html> 

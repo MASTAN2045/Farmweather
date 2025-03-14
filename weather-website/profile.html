@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - FarmWeather</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: url('https://images.unsplash.com/photo-1625246333195-78d9c38ad449?ixlib=rb-4.0.3') center/cover fixed;
+            color: #333;
+        }
+
+        .container {
+            min-height: 100vh;
+            background: rgba(255, 255, 255, 0.9);
+            padding-top: 80px;
+        }
+
+        nav {
+            background: #2e7d32;
+            padding: 1rem 2rem;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            color: white;
+            font-size: 1.8rem;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.3s;
+        }
+
+        .nav-links a:hover {
+            opacity: 0.8;
+        }
+
+        .profile-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .profile-icon {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #2e7d32;
+            font-size: 1.2rem;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background: white;
+            min-width: 160px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .dropdown-content a {
+            color: #333 !important;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .dropdown-content a:hover {
+            background: #f5f5f5;
+            opacity: 1 !important;
+        }
+
+        .profile-dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        .profile-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+        }
+
+        .profile-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .profile-avatar {
+            width: 150px;
+            height: 150px;
+            background: #2e7d32;
+            border-radius: 50%;
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 4rem;
+        }
+
+        .profile-name {
+            font-size: 2rem;
+            color: #2e7d32;
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-email {
+            color: #666;
+        }
+
+        .profile-section {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e0e0e0;
+        }
+
+        .section-title {
+            color: #2e7d32;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #e8f5e9;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            padding: 1rem;
+            background: #f9f9f9;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .info-item {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .info-label {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .info-value {
+            font-weight: 500;
+            color: #2e7d32;
+        }
+
+        .edit-button {
+            padding: 0.8rem 2rem;
+            background: #2e7d32;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 1rem;
+            border: 2px solid transparent;
+        }
+
+        .edit-button:hover {
+            background: #1b5e20;
+            transform: translateY(-2px);
+        }
+
+        .logout-button {
+            padding: 0.8rem 2rem;
+            background: #d32f2f;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 2rem;
+            width: 100%;
+            font-size: 1rem;
+        }
+
+        .logout-button:hover {
+            background: #b71c1c;
+        }
+
+        footer {
+            background: #1b5e20;
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+        }
+
+        .edit-form {
+            display: none;
+        }
+
+        .edit-form.active {
+            display: block;
+        }
+
+        .edit-form input {
+            width: 100%;
+            padding: 0.8rem;
+            margin-bottom: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .edit-form input:focus {
+            border-color: #2e7d32;
+            outline: none;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .cancel-button {
+            padding: 0.8rem 2rem;
+            background: #f5f5f5;
+            color: #333;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .cancel-button:hover {
+            background: #e0e0e0;
+        }
+
+        .save-button {
+            padding: 0.8rem 2rem;
+            background: #2e7d32;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .save-button:hover {
+            background: #1b5e20;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <a href="home.html" class="logo">FarmWeather</a>
+            <div class="nav-links">
+                <a href="home.html">Home</a>
+                <a href="weather.html">Weather</a>
+                <a href="crops.html">Crops</a>
+                <a href="assistant.html">Farm AI</a>
+                <div class="profile-dropdown">
+                    <div class="profile-icon">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="dropdown-content">
+                        <a href="profile.html"><i class="fas fa-user-circle"></i> Profile</a>
+                        <a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="profile-container">
+            <div class="profile-header">
+                <div class="profile-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <h1 class="profile-name" id="profileName">Loading...</h1>
+                <p class="profile-email" id="profileEmail">Loading...</p>
+            </div>
+
+            <div class="profile-section">
+                <h2 class="section-title">
+                    <i class="fas fa-user-circle"></i>
+                    Personal Information
+                </h2>
+                <div class="info-grid" id="personalInfoDisplay">
+                    <div class="info-item">
+                        <div class="info-label">First Name</div>
+                        <div class="info-value" id="firstName">Loading...</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Last Name</div>
+                        <div class="info-value" id="lastName">Loading...</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Email</div>
+                        <div class="info-value" id="email">Loading...</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Member Since</div>
+                        <div class="info-value" id="memberSince">Loading...</div>
+                    </div>
+                </div>
+                <div class="edit-form" id="personalInfoForm">
+                    <input type="text" id="editFirstName" placeholder="First Name">
+                    <input type="text" id="editLastName" placeholder="Last Name">
+                    <input type="email" id="editEmail" placeholder="Email">
+                    <div class="button-group">
+                        <button class="cancel-button" onclick="cancelEdit('personalInfo')">Cancel</button>
+                        <button class="save-button" onclick="savePersonalInfo()">Save Changes</button>
+                    </div>
+                </div>
+                <button class="edit-button" onclick="startEdit('personalInfo')">Edit Profile</button>
+            </div>
+
+            <div class="profile-section">
+                <h2 class="section-title">
+                    <i class="fas fa-shield-alt"></i>
+                    Account Settings
+                </h2>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">Email Notifications</div>
+                        <div class="info-value">Enabled</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Two-Factor Authentication</div>
+                        <div class="info-value">Disabled</div>
+                    </div>
+                </div>
+                <button class="edit-button">Manage Settings</button>
+            </div>
+
+            <div class="profile-section">
+                <h2 class="section-title">
+                    <i class="fas fa-farm"></i>
+                    Farm Information
+                </h2>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">Primary Location</div>
+                        <div class="info-value">Not Set</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Preferred Crops</div>
+                        <div class="info-value">Not Set</div>
+                    </div>
+                </div>
+                <button class="edit-button">Update Farm Info</button>
+            </div>
+
+            <button class="logout-button" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 FarmWeather. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // Check if user is logged in
+        window.onload = function() {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Update profile information
+            document.getElementById('profileName').textContent = `${user.firstName} ${user.lastName}`;
+            document.getElementById('profileEmail').textContent = user.email;
+            document.getElementById('firstName').textContent = user.firstName;
+            document.getElementById('lastName').textContent = user.lastName;
+            document.getElementById('email').textContent = user.email;
+            document.getElementById('memberSince').textContent = new Date().toLocaleDateString();
+        }
+
+        function logout() {
+            localStorage.removeItem('currentUser');
+            window.location.href = 'login.html';
+        }
+
+        function startEdit(section) {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            
+            if (section === 'personalInfo') {
+                document.getElementById('personalInfoDisplay').style.display = 'none';
+                document.getElementById('personalInfoForm').classList.add('active');
+                document.getElementById('editFirstName').value = user.firstName;
+                document.getElementById('editLastName').value = user.lastName;
+                document.getElementById('editEmail').value = user.email;
+            }
+            // Hide the edit button
+            event.target.style.display = 'none';
+        }
+
+        function cancelEdit(section) {
+            if (section === 'personalInfo') {
+                document.getElementById('personalInfoDisplay').style.display = 'grid';
+                document.getElementById('personalInfoForm').classList.remove('active');
+            }
+            // Show the edit button
+            document.querySelector(`#${section}Display`).nextElementSibling.nextElementSibling.style.display = 'block';
+        }
+
+        function savePersonalInfo() {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            
+            // Update user data
+            user.firstName = document.getElementById('editFirstName').value;
+            user.lastName = document.getElementById('editLastName').value;
+            user.email = document.getElementById('editEmail').value;
+            
+            // Save to localStorage
+            localStorage.setItem('currentUser', JSON.stringify(user));
+            
+            // Update display
+            document.getElementById('profileName').textContent = `${user.firstName} ${user.lastName}`;
+            document.getElementById('profileEmail').textContent = user.email;
+            document.getElementById('firstName').textContent = user.firstName;
+            document.getElementById('lastName').textContent = user.lastName;
+            document.getElementById('email').textContent = user.email;
+            
+            // Hide form and show display
+            cancelEdit('personalInfo');
+        }
+    </script>
+</body>
+</html> 

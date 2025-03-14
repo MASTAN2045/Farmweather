@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - FarmWeather</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: url('https://images.unsplash.com/photo-1625246333195-78d9c38ad449?ixlib=rb-4.0.3') center/cover fixed;
+            color: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 0;
+        }
+
+        .login-container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 400px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .logo-section {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .logo-section h1 {
+            color: #2e7d32;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .logo-section p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            border-color: #2e7d32;
+            outline: none;
+        }
+
+        .login-button {
+            width: 100%;
+            padding: 1rem;
+            background: #2e7d32;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .login-button:hover {
+            background: #1b5e20;
+        }
+
+        .alternative-actions {
+            margin-top: 1.5rem;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .alternative-actions a {
+            color: #2e7d32;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .alternative-actions a:hover {
+            text-decoration: underline;
+        }
+
+        .divider {
+            margin: 1.5rem 0;
+            display: flex;
+            align-items: center;
+            text-align: center;
+            color: #666;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .divider span {
+            padding: 0 10px;
+        }
+
+        .social-login {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .social-button {
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            color: #333;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .social-button:hover {
+            background: #f5f5f5;
+        }
+
+        .error-message {
+            color: #d32f2f;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="overlay"></div>
+    <div class="login-container">
+        <div class="logo-section">
+            <h1>FarmWeather</h1>
+            <p>Your agricultural weather companion</p>
+        </div>
+        
+        <form id="loginForm" onsubmit="return handleLogin(event)">
+            <div class="input-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" required>
+                <div class="error-message" id="emailError"></div>
+            </div>
+            
+            <div class="input-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" required>
+                <div class="error-message" id="passwordError"></div>
+            </div>
+            
+            <button type="submit" class="login-button">Login</button>
+        </form>
+        
+        <div class="alternative-actions">
+            <a href="#">Forgot password?</a>
+            <p style="margin-top: 1rem;">Don't have an account? <a href="signup.html">Sign up</a></p>
+        </div>
+        
+        <div class="divider">
+            <span>or continue with</span>
+        </div>
+        
+        <div class="social-login">
+            <button class="social-button">
+                <i class="fab fa-google"></i>
+                Google
+            </button>
+            <button class="social-button">
+                <i class="fab fa-facebook-f"></i>
+                Facebook
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function handleLogin(event) {
+            event.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            // Reset error messages
+            document.getElementById('emailError').style.display = 'none';
+            document.getElementById('passwordError').style.display = 'none';
+            
+            // Validation
+            if (!email) {
+                document.getElementById('emailError').textContent = 'Email is required';
+                document.getElementById('emailError').style.display = 'block';
+                return false;
+            }
+            
+            if (!password) {
+                document.getElementById('passwordError').textContent = 'Password is required';
+                document.getElementById('passwordError').style.display = 'block';
+                return false;
+            }
+
+            // Get users from localStorage
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            
+            // Find matching user
+            const user = users.find(u => u.email === email && u.password === password);
+            
+            if (user) {
+                // Store current user info (including all necessary data)
+                const currentUser = {
+                    firstName: user.firstName,
+                    lastName: user.lastName,
+                    email: user.email,
+                    password: user.password // Store password for verification
+                };
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                
+                // Redirect to home page
+                window.location.href = 'home.html';
+            } else {
+                // Show error for invalid credentials
+                document.getElementById('passwordError').textContent = 'Invalid email or password';
+                document.getElementById('passwordError').style.display = 'block';
+                return false;
+            }
+        }
+
+        // Check if user is already logged in
+        window.addEventListener('load', () => {
+            const currentUser = localStorage.getItem('currentUser');
+            if (currentUser) {
+                window.location.href = 'home.html';
+            }
+        });
+    </script>
+</body>
+</html> 

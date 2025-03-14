@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Home - FarmWeather</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        nav {
+            background: #2e7d32;
+            padding: 1rem 2rem;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            color: white;
+            font-size: 1.8rem;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.3s;
+        }
+
+        .nav-links a:hover {
+            opacity: 0.8;
+        }
+
+        .profile-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .profile-icon {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #2e7d32;
+            font-size: 1.2rem;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background: white;
+            min-width: 160px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .dropdown-content a {
+            color: #333 !important;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .dropdown-content a:hover {
+            background: #f5f5f5;
+            opacity: 1 !important;
+        }
+
+        .profile-dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        .banner {
+            background: url('https://images.unsplash.com/photo-1625246333195-78d9c38ad449?ixlib=rb-4.0.3') center/cover;
+            height: 70vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: white;
+            position: relative;
+            margin-top: 60px;
+        }
+
+        .banner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .banner-content {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+            padding: 0 20px;
+            text-align: center;
+        }
+
+        .banner-content h1 {
+            font-size: 3.8rem;
+            margin-bottom: 1.5rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .banner-content p {
+            font-size: 1.6rem;
+            margin-bottom: 2rem;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .cta-button {
+            display: inline-block;
+            padding: 1.2rem 2.5rem;
+            background: #2e7d32;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background 0.3s, transform 0.3s;
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+
+        .cta-button:hover {
+            background: #1b5e20;
+            transform: translateY(-2px);
+        }
+
+        .features {
+            padding: 5rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            color: #2e7d32;
+            margin-bottom: 3rem;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-item {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+        }
+
+        .feature-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            color: #2e7d32;
+            margin-bottom: 1rem;
+        }
+
+        .feature-item h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #2e7d32;
+        }
+
+        .benefits {
+            background: #e8f5e9 url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3') center/cover fixed;
+            position: relative;
+        }
+
+        .benefits::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(46, 125, 50, 0.9);
+        }
+
+        .benefits-container {
+            position: relative;
+            z-index: 1;
+            color: white;
+        }
+
+        .benefits-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .benefit-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .benefit-icon {
+            font-size: 1.5rem;
+            color: #2e7d32;
+        }
+
+        .testimonials {
+            padding: 5rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .testimonial-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .testimonial-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .testimonial-text {
+            font-style: italic;
+            margin-bottom: 1rem;
+        }
+
+        .testimonial-author {
+            font-weight: 600;
+            color: #2e7d32;
+        }
+
+        footer {
+            background: #1b5e20;
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .social-links {
+            margin-top: 2rem;
+        }
+
+        .social-links a {
+            color: white;
+            font-size: 1.5rem;
+            margin: 0 1rem;
+            transition: opacity 0.3s;
+        }
+
+        .social-links a:hover {
+            opacity: 0.8;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .banner h1 {
+                font-size: 2rem;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+        }
+
+        .location-search {
+            width: 100%;
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+        }
+
+        .search-fields {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .location-input {
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 1rem;
+        }
+
+        .location-input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .location-input option {
+            background: #2e7d32;
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .search-fields {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .quotes {
+            background: #f9f9f9;
+            padding: 5rem 2rem;
+        }
+
+        .quotes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .quote-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .quote-card i {
+            font-size: 2rem;
+            color: #2e7d32;
+            margin-bottom: 1rem;
+        }
+
+        .quote-card p {
+            font-style: italic;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
+        .quote-card cite {
+            color: #666;
+            font-style: normal;
+        }
+
+        .about-us {
+            padding: 5rem 2rem;
+            background: white;
+        }
+
+        .about-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .about-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            margin-top: 3rem;
+        }
+
+        .about-text {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .about-text p {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: #444;
+        }
+
+        .about-features {
+            display: grid;
+            gap: 2rem;
+        }
+
+        .about-feature {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .about-feature i {
+            font-size: 2rem;
+            color: #2e7d32;
+        }
+
+        .about-feature h3 {
+            color: #2e7d32;
+            margin-bottom: 0.5rem;
+        }
+
+        .about-feature p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 768px) {
+            .about-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .auth-btn {
+            padding: 0.5rem 1.5rem;
+            border-radius: 5px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .auth-btn.login {
+            background: transparent;
+            border: 2px solid white;
+        }
+
+        .auth-btn.login:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .auth-btn.signup {
+            background: white;
+            color: #2e7d32 !important;
+        }
+
+        .auth-btn.signup:hover {
+            background: #e8f5e9;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <a href="home.html" class="logo">FarmWeather</a>
+            <div class="nav-links">
+                <a href="home.html">Home</a>
+                <a href="weather.html">Weather</a>
+                <a href="crops.html">Crops</a>
+                <a href="assistant.html">Farm AI</a>
+                <div class="auth-buttons">
+                    <a href="login.html" class="auth-btn login">Login</a>
+                    <a href="signup.html" class="auth-btn signup">Sign Up</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="banner">
+        <div class="banner-content">
+            <h1>Grow Smarter with FarmWeather</h1>
+            <p>Join thousands of farmers who are making data-driven decisions for better crop yields. Get real-time weather updates, crop recommendations, and expert farming advice.</p>
+        </div>
+    </div>
+
+    <section class="quotes">
+        <h2 class="section-title">Words from the Field</h2>
+        <div class="quotes-grid">
+            <div class="quote-card">
+                <i class="fas fa-quote-left"></i>
+                <p>"The land is our greatest asset. Understanding weather patterns is key to protecting it."</p>
+                <cite>- Traditional Farming Wisdom</cite>
+            </div>
+            <div class="quote-card">
+                <i class="fas fa-quote-left"></i>
+                <p>"To a farmer, the weather is not just a topic of conversation, it's the rhythm of life."</p>
+                <cite>- Agricultural Proverb</cite>
+            </div>
+            <div class="quote-card">
+                <i class="fas fa-quote-left"></i>
+                <p>"Knowledge of weather and soil is the farmer's most valuable inheritance."</p>
+                <cite>- Farming Heritage</cite>
+            </div>
+        </div>
+    </section>
+
+    <section class="about-us">
+        <div class="about-content">
+            <h2 class="section-title">About FarmWeather</h2>
+            <div class="about-grid">
+                <div class="about-text">
+                    <p>FarmWeather is your dedicated agricultural weather platform, designed specifically for farmers and agricultural professionals. We combine accurate weather data with agricultural expertise to provide actionable insights for your farming operations.</p>
+                    <p>Our mission is to empower farmers with the tools and information they need to make weather-smart decisions, optimize crop yields, and practice sustainable agriculture.</p>
+                </div>
+                <div class="about-features">
+                    <div class="about-feature">
+                        <i class="fas fa-chart-line"></i>
+                        <h3>Data-Driven Insights</h3>
+                        <p>Advanced weather analytics tailored for agricultural needs</p>
+                    </div>
+                    <div class="about-feature">
+                        <i class="fas fa-users"></i>
+                        <h3>Community Focus</h3>
+                        <p>Built with input from real farmers and agricultural experts</p>
+                    </div>
+                    <div class="about-feature">
+                        <i class="fas fa-mobile-alt"></i>
+                        <h3>Always Accessible</h3>
+                        <p>Get weather updates and advisories anywhere, anytime</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="features">
+        <h2 class="section-title">Agricultural Weather Solutions</h2>
+        <div class="features-grid">
+            <div class="feature-item">
+                <i class="fas fa-cloud-sun-rain feature-icon"></i>
+                <h3>Smart Rainfall Prediction</h3>
+                <p>Get accurate rainfall forecasts to plan your irrigation and crop protection measures effectively.</p>
+            </div>
+            <div class="feature-item">
+                <i class="fas fa-leaf feature-icon"></i>
+                <h3>Crop-Specific Insights</h3>
+                <p>Receive customized weather alerts and recommendations based on your specific crop types and growth stages.</p>
+            </div>
+            <div class="feature-item">
+                <i class="fas fa-tint feature-icon"></i>
+                <h3>Soil Moisture Tracking</h3>
+                <p>Monitor soil moisture levels and get irrigation recommendations for optimal crop growth.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="benefits">
+        <div class="benefits-container">
+            <h2 class="section-title" style="color: white;">Benefits for Your Farm</h2>
+            <div class="benefits-list">
+                <div class="benefit-item">
+                    <i class="fas fa-seedling benefit-icon"></i>
+                    <div>
+                        <h3>Better Crop Planning</h3>
+                        <p>Time your planting and harvesting perfectly with accurate seasonal forecasts.</p>
+                    </div>
+                </div>
+                <div class="benefit-item">
+                    <i class="fas fa-hand-holding-water benefit-icon"></i>
+                    <div>
+                        <h3>Water Management</h3>
+                        <p>Optimize irrigation schedules and water usage based on weather predictions.</p>
+                    </div>
+                </div>
+                <div class="benefit-item">
+                    <i class="fas fa-shield-alt benefit-icon"></i>
+                    <div>
+                        <h3>Crop Protection</h3>
+                        <p>Protect your crops from adverse weather conditions with timely alerts and recommendations.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="testimonials">
+        <h2 class="section-title">Farmer Success Stories</h2>
+        <div class="testimonial-grid">
+            <div class="testimonial-card">
+                <p class="testimonial-text">"FarmWeather's rainfall predictions helped me optimize my irrigation schedule, saving water and improving my rice yield significantly."</p>
+                <p class="testimonial-author">- Rajesh Kumar, Rice Farmer</p>
+            </div>
+            <div class="testimonial-card">
+                <p class="testimonial-text">"The soil moisture tracking feature is a game-changer. I've reduced water waste and my crops are healthier than ever."</p>
+                <p class="testimonial-author">- Sarah Williams, Organic Farmer</p>
+            </div>
+            <div class="testimonial-card">
+                <p class="testimonial-text">"Thanks to FarmWeather's frost alerts, I was able to protect my fruit orchards during unexpected cold snaps."</p>
+                <p class="testimonial-author">- Michael Chen, Fruit Grower</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="cta-section">
+        <div class="cta-content">
+            <h2>Grow Smarter with FarmWeather</h2>
+            <p>Join thousands of farmers who are making data-driven decisions for better crop yields</p>
+            <a href="#signup" class="cta-button">Start Your Farm Journey</a>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-content">
+            <p>&copy; 2024 FarmWeather. All rights reserved.</p>
+            <div class="social-links">
+                <a href="#"><i class="fab fa-facebook"></i></a>
+                <a href="#"><i class="fab fa-twitter"></i></a>
+                <a href="#"><i class="fab fa-instagram"></i></a>
+                <a href="#"><i class="fab fa-linkedin"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Add smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Add scroll effect for nav background
+        window.addEventListener('scroll', () => {
+            const nav = document.querySelector('nav');
+            if (window.scrollY > 50) {
+                nav.style.background = '#1b5e20';
+            } else {
+                nav.style.background = '#2e7d32';
+            }
+        });
+
+        // Country and State data
+        
+       
+
+        // Update footer copyright
+        document.querySelector('.footer-content p').textContent = `© ${new Date().getFullYear()} FarmWeather. All rights reserved.`;
+
+        // Function to update navigation based on auth status
+        function updateNavigation() {
+            const currentUser = localStorage.getItem('currentUser');
+            const authButtons = document.querySelector('.auth-buttons');
+            
+            if (currentUser) {
+                // User is logged in - show profile dropdown
+                const user = JSON.parse(currentUser);
+                authButtons.innerHTML = `
+                    <div class="profile-dropdown">
+                        <div class="profile-icon">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="dropdown-content">
+                            <a href="profile.html"><i class="fas fa-user-circle"></i> Profile</a>
+                            <a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                        </div>
+                    </div>
+                `;
+            }
+            // If not logged in, keep the default login/signup buttons
+        }
+
+        // Logout function
+        function logout() {
+            localStorage.removeItem('currentUser');
+            window.location.reload();
+        }
+
+        // Update navigation on page load
+        window.addEventListener('load', updateNavigation);
+    </script>
+</body>
+</html> 

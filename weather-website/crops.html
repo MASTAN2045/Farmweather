@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crop Information - FarmWeather</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: url('https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?ixlib=rb-4.0.3') center/cover fixed;
+            color: #333;
+        }
+
+        .container {
+            min-height: 100vh;
+            background: rgba(255, 255, 255, 0.9);
+            padding-top: 80px;
+        }
+
+        nav {
+            background: #2e7d32;
+            padding: 1rem 2rem;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            color: white;
+            font-size: 1.8rem;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.3s;
+        }
+
+        .nav-links a:hover {
+            opacity: 0.8;
+        }
+
+        .profile-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .profile-icon {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #2e7d32;
+            font-size: 1.2rem;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background: white;
+            min-width: 160px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .dropdown-content a {
+            color: #333 !important;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .dropdown-content a:hover {
+            background: #f5f5f5;
+            opacity: 1 !important;
+        }
+
+        .profile-dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        .crop-selector {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .crop-selector h2 {
+            color: #2e7d32;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .crop-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .crop-card {
+            background: #f5f5f5;
+            padding: 1.5rem;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: 2px solid #2e7d32;
+        }
+
+        .crop-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+            background: #e8f5e9;
+        }
+
+        .crop-card h3 {
+            color: #2e7d32;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .crop-info {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+
+        .crop-info.active {
+            display: block;
+        }
+
+        .crop-info h3 {
+            color: #2e7d32;
+            margin-bottom: 1rem;
+            font-size: 1.8rem;
+            text-align: center;
+        }
+
+        .crop-info .selected-crop {
+            text-align: center;
+            font-size: 2rem;
+            color: #2e7d32;
+            margin-bottom: 2rem;
+            font-weight: 600;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .info-card {
+            background: #f9f9f9;
+            padding: 1.5rem;
+            border-radius: 10px;
+        }
+
+        .info-card h4 {
+            color: #2e7d32;
+            margin-bottom: 1rem;
+        }
+
+        footer {
+            background: #1b5e20;
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <a href="home.html" class="logo">FarmWeather</a>
+            <div class="nav-links">
+                <a href="home.html">Home</a>
+                <a href="weather.html">Weather</a>
+                <a href="crops.html">Crops</a>
+                <a href="assistant.html">Farm AI</a>
+                <div class="profile-dropdown">
+                    <div class="profile-icon">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="dropdown-content">
+                        <a href="profile.html"><i class="fas fa-user-circle"></i> Profile</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="crop-selector">
+            <h2>Select a Crop to Learn More</h2>
+            <div class="crop-grid">
+                <div class="crop-card" data-crop="rice">
+                    <h3>Rice</h3>
+                </div>
+                <div class="crop-card" data-crop="wheat">
+                    <h3>Wheat</h3>
+                </div>
+                <div class="crop-card" data-crop="corn">
+                    <h3>Corn</h3>
+                </div>
+                <div class="crop-card" data-crop="cotton">
+                    <h3>Cotton</h3>
+                </div>
+                <div class="crop-card" data-crop="sugarcane">
+                    <h3>Sugarcane</h3>
+                </div>
+                <div class="crop-card" data-crop="potato">
+                    <h3>Potato</h3>
+                </div>
+                <div class="crop-card" data-crop="soybean">
+                    <h3>Soybean</h3>
+                </div>
+                <div class="crop-card" data-crop="tomato">
+                    <h3>Tomato</h3>
+                </div>
+            </div>
+        </div>
+
+        <div id="cropInfo" class="crop-info">
+            <div class="selected-crop" id="selectedCropName"></div>
+            <div class="info-grid">
+                <div class="info-card">
+                    <h4>Growing Conditions</h4>
+                    <div id="growingConditions"></div>
+                </div>
+                <div class="info-card">
+                    <h4>Soil Requirements</h4>
+                    <div id="soilRequirements"></div>
+                </div>
+                <div class="info-card">
+                    <h4>Water Requirements</h4>
+                    <div id="waterRequirements"></div>
+                </div>
+                <div class="info-card">
+                    <h4>Common Issues</h4>
+                    <div id="commonIssues"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 FarmWeather. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // Authentication check
+        function checkAuth() {
+            const currentUser = localStorage.getItem('currentUser');
+            if (!currentUser) {
+                window.location.href = 'login.html';
+            }
+        }
+
+        // Check authentication on page load
+        window.addEventListener('load', checkAuth);
+
+        // Add logout function
+        function logout() {
+            localStorage.removeItem('currentUser');
+            window.location.href = 'login.html';
+        }
+
+        const cropData = {
+            rice: {
+                name: "Rice",
+                growingConditions: "Temperature: 20-35°C\nHumidity: 60-80%\nSeason: Kharif/Rabi\nGrowing Period: 110-150 days",
+                soilRequirements: "Clay or clay loam soil\npH: 5.5-6.5\nGood water retention capacity\nRich in organic matter",
+                waterRequirements: "1300-1800mm water per season\nFlooded conditions for most growth stages\nCritical during flowering",
+                commonIssues: "Blast disease\nBacterial leaf blight\nStem borers\nBrown plant hoppers\nNutrient deficiency"
+            },
+            wheat: {
+                name: "Wheat",
+                growingConditions: "Temperature: 15-25°C\nHumidity: 50-60%\nSeason: Rabi\nGrowing Period: 120-150 days",
+                soilRequirements: "Well-drained loamy soil\npH: 6.0-7.0\nModerate fertility\nGood organic content",
+                waterRequirements: "450-650mm water per season\n4-6 irrigations during growth\nCritical during heading",
+                commonIssues: "Rust diseases\nPowdery mildew\nLoose smut\nAphids\nRodent damage"
+            },
+            corn: {
+                name: "Corn",
+                growingConditions: "Temperature: 20-30°C\nHumidity: 50-75%\nSeason: Kharif\nGrowing Period: 90-120 days",
+                soilRequirements: "Well-drained loamy soil\npH: 5.5-7.0\nHigh organic matter\nGood aeration",
+                waterRequirements: "500-800mm water per season\nCritical during silking stage\nRegular irrigation needed",
+                commonIssues: "Leaf blight\nStalk rot\nEar rot\nCorn borers\nNutrient deficiency"
+            },
+            cotton: {
+                name: "Cotton",
+                growingConditions: "Temperature: 25-35°C\nHumidity: 50-60%\nSeason: Kharif\nGrowing Period: 150-180 days",
+                soilRequirements: "Deep black cotton soil or alluvial soil\npH: 6.0-7.5\nGood drainage\nHigh fertility",
+                waterRequirements: "700-1300mm water per season\nCritical during flowering and boll formation\nModerate drought tolerance",
+                commonIssues: "Bollworms\nWhiteflies\nLeaf curl virus\nWilt disease\nBoll rot"
+            },
+            sugarcane: {
+                name: "Sugarcane",
+                growingConditions: "Temperature: 20-35°C\nHumidity: 60-80%\nYear-round crop\nGrowing Period: 12-18 months",
+                soilRequirements: "Deep, well-drained soil\npH: 6.5-7.5\nRich in organic matter\nGood moisture retention",
+                waterRequirements: "1500-2500mm water per season\nRegular irrigation needed\nSensitive to waterlogging",
+                commonIssues: "Red rot disease\nSmut\nWilt\nBorers\nScale insects"
+            },
+            potato: {
+                name: "Potato",
+                growingConditions: "Temperature: 15-25°C\nHumidity: 50-70%\nSeason: Rabi\nGrowing Period: 90-120 days",
+                soilRequirements: "Well-drained loamy soil\npH: 5.0-6.5\nLoose and friable\nRich in organic matter",
+                waterRequirements: "500-700mm water per season\nRegular, light irrigation\nCritical during tuber formation",
+                commonIssues: "Late blight\nEarly blight\nScab\nViral diseases\nTuber moth"
+            },
+            soybean: {
+                name: "Soybean",
+                growingConditions: "Temperature: 20-30°C\nHumidity: 50-70%\nSeason: Kharif\nGrowing Period: 90-120 days",
+                soilRequirements: "Well-drained loamy soil\npH: 6.0-7.0\nGood organic content\nNitrogen fixing capability",
+                waterRequirements: "450-700mm water per season\nCritical during pod filling\nModerate drought tolerance",
+                commonIssues: "Rust\nPod blight\nMosaic virus\nStem fly\nDefoliating insects"
+            },
+            tomato: {
+                name: "Tomato",
+                growingConditions: "Temperature: 20-30°C\nHumidity: 50-70%\nYear-round with protection\nGrowing Period: 90-120 days",
+                soilRequirements: "Well-drained loamy soil\npH: 6.0-7.0\nRich in organic matter\nGood fertility",
+                waterRequirements: "400-600mm water per season\nRegular, consistent moisture\nSensitive to fluctuations",
+                commonIssues: "Early blight\nLate blight\nFruit worms\nBacterial wilt\nNematodes"
+            }
+        };
+
+        document.querySelectorAll('.crop-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const crop = card.dataset.crop;
+                const data = cropData[crop];
+                
+                document.getElementById('selectedCropName').textContent = data.name;
+                document.getElementById('growingConditions').textContent = data.growingConditions;
+                document.getElementById('soilRequirements').textContent = data.soilRequirements;
+                document.getElementById('waterRequirements').textContent = data.waterRequirements;
+                document.getElementById('commonIssues').textContent = data.commonIssues;
+                
+                document.getElementById('cropInfo').classList.add('active');
+
+                // Smooth scroll to crop info
+                document.getElementById('cropInfo').scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            });
+        });
+    </script>
+</body>
+</html> 

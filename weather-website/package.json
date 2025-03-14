@@ -1,0 +1,12 @@
+{
+  "name": "weather-website-frontend",
+  "version": "1.0.0",
+  "description": "Frontend for FarmWeather application",
+  "scripts": {
+    "start": "http-server ./ -p 3000 --cors -c-1 -o /home.html",
+    "dev": "http-server ./ -p 3000 --cors -c-1 -o /home.html --proxy http://localhost:5000"
+  },
+  "dependencies": {
+    "http-server": "^14.1.1"
+  }
+} 
