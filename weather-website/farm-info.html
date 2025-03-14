@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Farm Information - FarmWeather</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: url('https://images.unsplash.com/photo-1625246333195-78d9c38ad449?ixlib=rb-4.0.3') center/cover fixed;
+            color: #333;
+        }
+
+        .container {
+            min-height: 100vh;
+            background: rgba(255, 255, 255, 0.9);
+            padding-top: 80px;
+            padding-bottom: 2rem;
+        }
+
+        nav {
+            background: #2e7d32;
+            padding: 1rem 2rem;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            color: white;
+            font-size: 1.8rem;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.3s;
+        }
+
+        .nav-links a:hover {
+            opacity: 0.8;
+        }
+
+        .farm-container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 2rem;
+        }
+
+        .section-title {
+            color: #2e7d32;
+            margin-bottom: 1.5rem;
+            font-size: 2rem;
+            text-align: center;
+        }
+
+        .farm-form {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .form-group select[multiple] {
+            height: 120px;
+        }
+
+        .crop-images-container {
+            margin-top: 1rem;
+        }
+
+        .crop-image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .crop-image-item {
+            position: relative;
+            width: 100%;
+            padding-bottom: 100%;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid #e0e0e0;
+        }
+
+        .crop-image-item img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .remove-image {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(255, 0, 0, 0.8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .save-button {
+            background: #2e7d32;
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            width: 100%;
+            transition: background 0.3s;
+        }
+
+        .save-button:hover {
+            background: #1b5e20;
+        }
+
+        .advice-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-top: 2rem;
+        }
+
+        .advice-title {
+            color: #2e7d32;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .advice-card {
+            background: #f9f9f9;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border-left: 4px solid #2e7d32;
+        }
+
+        .advice-card h4 {
+            color: #2e7d32;
+            margin-bottom: 0.5rem;
+        }
+
+        .advice-card p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .weather-advice {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #e8f5e9;
+            border-radius: 8px;
+        }
+
+        @media (max-width: 768px) {
+            .farm-container {
+                padding: 1rem;
+            }
+        }
+
+        .show-crops-button {
+            background: #2e7d32;
+            color: white;
+            border: none;
+            padding: 0.8rem;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 1rem;
+            font-size: 1rem;
+            transition: background 0.3s;
+        }
+
+        .show-crops-button:hover {
+            background: #1b5e20;
+        }
+
+        .apply-crops-button {
+            background: #1b5e20;
+            color: white;
+            border: none;
+            padding: 0.8rem;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .selected-crops-display {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            min-height: 2.5rem;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <a href="home.html" class="logo">FarmWeather</a>
+            <div class="nav-links">
+                <a href="home.html">Home</a>
+                <a href="weather.html">Weather</a>
+                <a href="crops.html">Crops</a>
+                <a href="farm-info.html">Farm Info</a>
+                <a href="assistant.html">Farm AI</a>
+                <div class="profile-dropdown">
+                    <div class="profile-icon">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="dropdown-content">
+                        <a href="profile.html"><i class="fas fa-user-circle"></i> Profile</a>
+                        <a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="farm-container">
+            <h1 class="section-title">Farm Information & Advice</h1>
+            
+            <div class="farm-form">
+                <div class="form-group">
+                    <label for="farmLocation">Farm Location</label>
+                    <input type="text" id="farmLocation" placeholder="Enter your farm location">
+                </div>
+
+                <div class="form-group">
+                    <label for="farmSize">Farm Size (Acres)</label>
+                    <input type="number" id="farmSize" placeholder="Enter farm size">
+                </div>
+
+                <div class="form-group">
+                    <label for="soilType">Soil Type</label>
+                    <select id="soilType">
+                        <option value="">Select soil type</option>
+                        <option value="clay">Clay Soil</option>
+                        <option value="sandy">Sandy Soil</option>
+                        <option value="loamy">Loamy Soil</option>
+                        <option value="silt">Silty Soil</option>
+                        <option value="peat">Peat Soil</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="preferredCrops">Preferred Crops</label>
+                    <select id="preferredCrops">
+                        <option value="">Select preferred crop</option>
+                        <option value="rice">Rice</option>
+                        <option value="corn">Corn</option>
+                        <option value="wheat">Wheat</option>
+                        <option value="sugarcane">Sugarcane</option>
+                        <option value="potato">Potato</option>
+                        <option value="soybean">Soybean</option>
+                        <option value="tomato">Tomato</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="farmExperience">Farming Experience</label>
+                    <select id="farmExperience">
+                        <option value="">Select experience level</option>
+                        <option value="beginner">Beginner (0-2 years)</option>
+                        <option value="intermediate">Intermediate (3-5 years)</option>
+                        <option value="experienced">Experienced (5-10 years)</option>
+                        <option value="expert">Expert (10+ years)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="irrigationType">Irrigation Type</label>
+                    <select id="irrigationType">
+                        <option value="">Select irrigation type</option>
+                        <option value="drip">Drip Irrigation</option>
+                        <option value="sprinkler">Sprinkler System</option>
+                        <option value="flood">Flood Irrigation</option>
+                        <option value="furrow">Furrow Irrigation</option>
+                    </select>
+                </div>
+
+                <button class="save-button" onclick="saveFarmInfo()"> Get Advice</button>
+            </div>
+
+            <div class="advice-section" id="adviceSection" style="display: none;">
+                <h2 class="advice-title">Personalized Farming Advice</h2>
+                <div id="adviceContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check authentication on page load
+        window.onload = function() {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
+            loadFarmInfo();
+        }
+
+        function loadFarmInfo() {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            if (user) {
+                document.getElementById('farmLocation').value = user.farmLocation || '';
+                document.getElementById('farmSize').value = user.farmSize || '';
+                document.getElementById('farmExperience').value = user.farmExperience || '';
+                document.getElementById('soilType').value = user.soilType || '';
+                document.getElementById('irrigationType').value = user.irrigationType || '';
+                document.getElementById('preferredCrops').value = user.preferredCrop || '';
+
+                // Generate advice if farm info exists
+                if (user.farmLocation && user.preferredCrop) {
+                    generateAdvice();
+                }
+            }
+        }
+
+        function saveFarmInfo() {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            
+            // Update farm data
+            user.farmLocation = document.getElementById('farmLocation').value;
+            user.farmSize = document.getElementById('farmSize').value;
+            user.farmExperience = document.getElementById('farmExperience').value;
+            user.soilType = document.getElementById('soilType').value;
+            user.irrigationType = document.getElementById('irrigationType').value;
+            user.preferredCrop = document.getElementById('preferredCrops').value;
+            
+            // Save to localStorage
+            localStorage.setItem('currentUser', JSON.stringify(user));
+            
+            // Generate and display advice
+            generateAdvice();
+        }
+
+        function getCropAdvice(crop, soilType) {
+            const soilTypeAdvice = {
+                clay: {
+                    rice: "Ideal for rice cultivation. Maintain proper water levels and consider zinc supplementation.",
+                    wheat: "Good for wheat. Focus on drainage and timing of nitrogen application.",
+                    corn: "Ensure proper drainage and add organic matter for better root development.",
+                    sugarcane: "Well-suited. Monitor water retention and add organic matter.",
+                    potato: "May be challenging. Add organic matter and ensure good drainage.",
+                    soybean: "Add organic matter and maintain proper drainage.",
+                    tomato: "Use raised beds and improve drainage."
+                },
+                sandy: {
+                    rice: "Not ideal. Consider alternative crops or significant soil amendments.",
+                    wheat: "Add organic matter and monitor water retention.",
+                    corn: "Good drainage but needs frequent irrigation and fertilization.",
+                    sugarcane: "Requires frequent irrigation and nutrient management.",
+                    potato: "Well-suited. Monitor moisture levels and nutrient leaching.",
+                    soybean: "Add organic matter and monitor irrigation closely.",
+                    tomato: "Good choice. Maintain consistent moisture."
+                },
+                loamy: {
+                    rice: "Good potential with proper water management.",
+                    wheat: "Excellent choice. Maintain organic matter levels.",
+                    corn: "Ideal soil type. Focus on nutrient timing.",
+                    sugarcane: "Excellent choice. Maintain soil structure.",
+                    potato: "Perfect soil type. Monitor for disease in wet conditions.",
+                    soybean: "Ideal conditions. Maintain soil health.",
+                    tomato: "Excellent choice. Monitor moisture levels."
+                },
+                silt: {
+                    rice: "Good water retention. Monitor for compaction.",
+                    wheat: "Well-suited. Prevent soil crusting.",
+                    corn: "Good choice. Maintain soil structure.",
+                    sugarcane: "Monitor soil compaction and drainage.",
+                    potato: "Good choice. Watch for soil compaction.",
+                    soybean: "Well-suited. Maintain soil structure.",
+                    tomato: "Add organic matter to improve structure."
+                },
+                peat: {
+                    rice: "Monitor pH levels and nutrient availability.",
+                    wheat: "Adjust pH and monitor nutrient levels.",
+                    corn: "Monitor pH and add mineral nutrients.",
+                    sugarcane: "Adjust pH and monitor drainage.",
+                    potato: "Good for potatoes. Monitor pH levels.",
+                    soybean: "Adjust pH and monitor nutrients.",
+                    tomato: "Monitor pH and calcium levels."
+                }
+            };
+
+            let advice = "";
+            if (soilType && soilTypeAdvice[soilType] && soilTypeAdvice[soilType][crop]) {
+                advice = `${crop.charAt(0).toUpperCase() + crop.slice(1)}: ${soilTypeAdvice[soilType][crop]} `;
+            }
+
+            // Add experience-based advice
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            if (user.farmExperience === 'beginner') {
+                advice += "\n\nBeginner Tips: Start with easier crops, maintain detailed records, and consider joining local farming groups for support. ";
+            } else if (user.farmExperience === 'intermediate') {
+                advice += "\n\nIntermediate Tips: Focus on optimizing yields, experiment with different varieties, and implement crop rotation. ";
+            } else if (user.farmExperience === 'experienced' || user.farmExperience === 'expert') {
+                advice += "\n\nAdvanced Tips: Consider advanced techniques like precision farming, soil testing, and integrated pest management. ";
+            }
+
+            // Add irrigation-specific advice
+            if (user.irrigationType) {
+                const irrigationAdvice = {
+                    drip: "Optimize your drip irrigation by maintaining proper pressure and regularly checking for clogged emitters. Consider fertigation for efficient nutrient delivery.",
+                    sprinkler: "For best results with sprinkler irrigation, water early morning or late evening. Monitor wind conditions and adjust spray patterns accordingly.",
+                    flood: "With flood irrigation, ensure proper field leveling and monitor soil moisture levels to prevent waterlogging.",
+                    furrow: "For furrow irrigation, maintain proper slope and furrow length. Consider surge irrigation for better efficiency."
+                };
+                advice += "\n\nIrrigation Management: " + (irrigationAdvice[user.irrigationType] || "");
+            }
+
+            // Add farm size-specific advice
+            if (user.farmSize) {
+                if (user.farmSize < 10) {
+                    advice += "\n\nSmall Farm Management: Focus on high-value crops and intensive farming techniques. Consider intercropping for maximum land utilization.";
+                } else if (user.farmSize < 50) {
+                    advice += "\n\nMedium Farm Management: Balance between mechanization and manual labor. Consider diversifying crops for risk management.";
+                } else {
+                    advice += "\n\nLarge Farm Management: Implement precision farming techniques. Consider investing in modern machinery and automation systems.";
+                }
+            }
+
+            return advice || "Select your preferred crop and provide farm details to receive specific cultivation advice.";
+        }
+
+        function generateAdvice() {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            const adviceSection = document.getElementById('adviceSection');
+            const adviceContent = document.getElementById('adviceContent');
+            
+            if (!user.farmLocation || !user.soilType || !user.preferredCrop) {
+                alert('Please fill in all required information to get personalized advice.');
+                return;
+            }
+
+            // Show advice section
+            adviceSection.style.display = 'block';
+            adviceContent.innerHTML = '';
+
+            // Generate comprehensive advice
+            const soilAdvice = getSoilAdvice(user.soilType);
+            const irrigationAdvice = getIrrigationAdvice(user.irrigationType);
+            const cropAdvice = getCropAdvice(user.preferredCrop, user.soilType);
+            
+            // Add advice cards with more detailed information
+            adviceContent.innerHTML = `
+                <div class="advice-card">
+                    <h4>Soil Management for ${user.farmLocation}</h4>
+                    <p>${soilAdvice}</p>
+                </div>
+                <div class="advice-card">
+                    <h4>Irrigation Strategy</h4>
+                    <p>${irrigationAdvice}</p>
+                </div>
+                <div class="advice-card">
+                    <h4>Crop-Specific Recommendations</h4>
+                    <p>${cropAdvice}</p>
+                </div>
+                <div class="weather-advice">
+                    <h4>Local Weather Considerations</h4>
+                    <p>Based on your location in ${user.farmLocation}, monitor local weather patterns and adjust farming practices accordingly.</p>
+                </div>
+            `;
+        }
+
+        function getSoilAdvice(soilType) {
+            const soilAdvice = {
+                clay: "Clay soil retains water well but needs proper drainage. Add organic matter to improve structure. Best for rice and wheat.",
+                sandy: "Sandy soil drains quickly. Use mulch and compost to improve water retention. Suitable for root vegetables.",
+                loamy: "Ideal soil type for most crops. Maintain organic matter levels for continued fertility.",
+                silt: "Good water retention but can become compacted. Add organic matter to improve structure.",
+                peat: "Rich in organic matter but may need pH adjustment. Good for specialized crops."
+            };
+            return soilAdvice[soilType] || "Consider soil testing to determine optimal amendments for your soil type.";
+        }
+
+        function getIrrigationAdvice(irrigationType) {
+            const irrigationAdvice = {
+                drip: "Optimize water usage by maintaining proper pressure and regularly checking for clogged emitters. Best for row crops and vegetables.",
+                sprinkler: "Monitor wind conditions for even distribution. Water early morning or late evening to minimize evaporation.",
+                flood: "Schedule irrigation based on soil moisture levels. Consider land leveling for uniform water distribution.",
+                furrow: "Maintain proper furrow slope for efficient water distribution. Monitor irrigation time to prevent water logging."
+            };
+            return irrigationAdvice[irrigationType] || "Choose an irrigation system based on your crop type and water availability.";
+        }
+
+        function logout() {
+            localStorage.removeItem('currentUser');
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html> 

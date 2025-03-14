@@ -80,6 +80,11 @@
             cursor: pointer;
             color: #2e7d32;
             font-size: 1.2rem;
+            transition: transform 0.3s;
+        }
+
+        .profile-icon:hover {
+            transform: scale(1.05);
         }
 
         .dropdown-content {
@@ -91,6 +96,7 @@
             box-shadow: 0 8px 16px rgba(0,0,0,0.1);
             border-radius: 8px;
             overflow: hidden;
+            z-index: 1000;
         }
 
         .dropdown-content a {
@@ -98,6 +104,7 @@
             padding: 12px 16px;
             text-decoration: none;
             display: block;
+            transition: background 0.3s;
         }
 
         .dropdown-content a:hover {
@@ -154,21 +161,31 @@
             line-height: 1.6;
         }
 
-        .cta-button {
+        .start-journey-button {
             display: inline-block;
-            padding: 1.2rem 2.5rem;
+            padding: 1.5rem 3rem;
             background: #2e7d32;
             color: white;
             text-decoration: none;
-            border-radius: 5px;
-            transition: background 0.3s, transform 0.3s;
-            font-size: 1.2rem;
-            font-weight: 500;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-top: 2rem;
+            border: 2px solid white;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
         }
 
-        .cta-button:hover {
+        .start-journey-button:hover {
             background: #1b5e20;
-            transform: translateY(-2px);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .start-journey-button:active {
+            transform: translateY(-1px);
         }
 
         .features {
@@ -496,6 +513,21 @@
             background: #e8f5e9;
             transform: translateY(-2px);
         }
+
+        /* Add styles for restricted links */
+        .nav-links a.restricted {
+            cursor: not-allowed;
+            position: relative;
+        }
+
+        .nav-links a.restricted::after {
+            content: '🔒';
+            font-size: 0.8em;
+            margin-left: 4px;
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+        }
     </style>
 </head>
 <body>
@@ -504,12 +536,22 @@
             <a href="home.html" class="logo">FarmWeather</a>
             <div class="nav-links">
                 <a href="home.html">Home</a>
-                <a href="weather.html">Weather</a>
-                <a href="crops.html">Crops</a>
-                <a href="assistant.html">Farm AI</a>
-                <div class="auth-buttons">
+                <a href="weather.html" class="restricted">Weather</a>
+                <a href="crops.html" class="restricted">Crops</a>
+                <a href="farm-info.html" class="restricted">Farm Info</a>
+                <a href="assistant.html" class="restricted">Farm AI</a>
+                <div id="loginSignupButtons" class="auth-buttons">
                     <a href="login.html" class="auth-btn login">Login</a>
                     <a href="signup.html" class="auth-btn signup">Sign Up</a>
+                </div>
+                <div class="profile-dropdown" style="display: none;">
+                    <div class="profile-icon">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="dropdown-content">
+                        <a href="profile.html"><i class="fas fa-user-circle"></i> Profile</a>
+                        <a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -517,8 +559,11 @@
 
     <div class="banner">
         <div class="banner-content">
-            <h1>Grow Smarter with FarmWeather</h1>
-            <p>Join thousands of farmers who are making data-driven decisions for better crop yields. Get real-time weather updates, crop recommendations, and expert farming advice.</p>
+            <h1>Welcome to FarmWeather</h1>
+            <p>Your intelligent farming companion for weather monitoring and crop management</p>
+            <div id="startJourneySection">
+                <a href="#" class="start-journey-button">Start Farm Journey</a>
+            </div>
         </div>
     </div>
 
@@ -661,68 +706,98 @@
     </footer>
 
     <script>
-        // Add smooth scrolling for navigation links
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function(e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
-                }
-            });
+        // Initialize authentication state
+        function initializeAuth() {
+            const currentUser = localStorage.getItem('currentUser');
+            const isLoggedIn = localStorage.getItem('isLoggedIn');
+            
+            // Clear inconsistent state
+            if (!currentUser && isLoggedIn === 'true') {
+                localStorage.setItem('isLoggedIn', 'false');
+            }
+            if (currentUser && isLoggedIn !== 'true') {
+                localStorage.setItem('isLoggedIn', 'true');
+            }
+        }
+
+        // Function to check if user is logged in
+        function isUserLoggedIn() {
+            const currentUser = localStorage.getItem('currentUser');
+            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+            return currentUser && isLoggedIn;
+        }
+
+        // Function to protect pages
+        function protectPage() {
+            const publicPages = ['home.html', 'login.html', 'signup.html', ''];
+            const currentPage = window.location.pathname.split('/').pop();
+            
+            if (!publicPages.includes(currentPage) && !isUserLoggedIn()) {
+                window.location.href = 'login.html';
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('currentUser');
+            localStorage.setItem('isLoggedIn', 'false');
+            window.location.href = 'home.html';
+        }
+
+        // Initialize everything when the DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeAuth();
+            updateNavigation();
+            protectPage();
+            
+            // Update footer copyright
+            document.querySelector('.footer-content p').textContent = `© ${new Date().getFullYear()} FarmWeather. All rights reserved.`;
+            
+            // Add scroll event listener
+            window.addEventListener('scroll', handleScroll);
         });
 
         // Add scroll effect for nav background
-        window.addEventListener('scroll', () => {
+        function handleScroll() {
             const nav = document.querySelector('nav');
             if (window.scrollY > 50) {
                 nav.style.background = '#1b5e20';
             } else {
                 nav.style.background = '#2e7d32';
             }
-        });
-
-        // Country and State data
-        
-       
-
-        // Update footer copyright
-        document.querySelector('.footer-content p').textContent = `© ${new Date().getFullYear()} FarmWeather. All rights reserved.`;
+        }
 
         // Function to update navigation based on auth status
         function updateNavigation() {
-            const currentUser = localStorage.getItem('currentUser');
-            const authButtons = document.querySelector('.auth-buttons');
-            
-            if (currentUser) {
-                // User is logged in - show profile dropdown
-                const user = JSON.parse(currentUser);
-                authButtons.innerHTML = `
-                    <div class="profile-dropdown">
-                        <div class="profile-icon">
-                            <i class="fas fa-user"></i>
-                        </div>
-                        <div class="dropdown-content">
-                            <a href="profile.html"><i class="fas fa-user-circle"></i> Profile</a>
-                            <a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
-                        </div>
-                    </div>
-                `;
+            const isLoggedIn = isUserLoggedIn();
+            const loginSignupButtons = document.getElementById('loginSignupButtons');
+            const profileDropdown = document.querySelector('.profile-dropdown');
+            const restrictedLinks = document.querySelectorAll('a[href="weather.html"], a[href="crops.html"], a[href="farm-info.html"], a[href="assistant.html"]');
+
+            if (isLoggedIn) {
+                // User is logged in
+                if (loginSignupButtons) loginSignupButtons.style.display = 'none';
+                if (profileDropdown) profileDropdown.style.display = 'inline-block';
+                
+                // Enable restricted links
+                restrictedLinks.forEach(link => {
+                    link.style.pointerEvents = 'auto';
+                    link.style.opacity = '1';
+                    link.classList.remove('restricted');
+                });
+            } else {
+                // User is not logged in
+                if (loginSignupButtons) loginSignupButtons.style.display = 'block';
+                if (profileDropdown) profileDropdown.style.display = 'none';
+                
+                // Disable restricted links
+                restrictedLinks.forEach(link => {
+                    link.style.pointerEvents = 'none';
+                    link.style.opacity = '0.5';
+                    link.title = 'Please login to access this feature';
+                    link.classList.add('restricted');
+                });
             }
-            // If not logged in, keep the default login/signup buttons
         }
-
-        // Logout function
-        function logout() {
-            localStorage.removeItem('currentUser');
-            window.location.reload();
-        }
-
-        // Update navigation on page load
-        window.addEventListener('load', updateNavigation);
     </script>
 </body>
 </html> 

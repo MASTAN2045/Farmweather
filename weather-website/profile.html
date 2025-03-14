@@ -134,6 +134,37 @@
             justify-content: center;
             color: white;
             font-size: 4rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .profile-avatar-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 0.5rem;
+            color: white;
+            font-size: 0.8rem;
+            text-align: center;
+            cursor: pointer;
+            transform: translateY(100%);
+            transition: transform 0.3s;
+        }
+
+        .profile-avatar:hover .profile-avatar-overlay {
+            transform: translateY(0);
+        }
+
+        #profilePicInput {
+            display: none;
         }
 
         .profile-name {
@@ -297,6 +328,141 @@
         .save-button:hover {
             background: #1b5e20;
         }
+
+        .image-edit-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1100;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .image-edit-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            max-width: 90%;
+            width: 500px;
+        }
+
+        .image-preview {
+            width: 100%;
+            height: 300px;
+            object-fit: contain;
+            margin-bottom: 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+        }
+
+        .image-controls {
+            display: flex;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .image-control-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            background: #2e7d32;
+            color: white;
+            cursor: pointer;
+        }
+
+        .image-control-btn:hover {
+            background: #1b5e20;
+        }
+
+        .slider-container {
+            margin: 1rem 0;
+        }
+
+        .slider-container label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #666;
+        }
+
+        .slider {
+            width: 100%;
+        }
+
+        .crop-images-container {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #f9f9f9;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .crop-image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .crop-image-item {
+            position: relative;
+            width: 100%;
+            padding-bottom: 100%;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid #e0e0e0;
+        }
+
+        .crop-image-item img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .crop-image-item .remove-image {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(255, 0, 0, 0.8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        select[multiple] {
+            width: 100%;
+            padding: 0.8rem;
+            margin-bottom: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            height: 120px;
+        }
+
+        select[multiple] option {
+            padding: 0.5rem;
+        }
+
+        select {
+            width: 100%;
+            padding: 0.8rem;
+            margin-bottom: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
     </style>
 </head>
 <body>
@@ -307,6 +473,7 @@
                 <a href="home.html">Home</a>
                 <a href="weather.html">Weather</a>
                 <a href="crops.html">Crops</a>
+                <a href="farm-info.html">Farm Info</a>
                 <a href="assistant.html">Farm AI</a>
                 <div class="profile-dropdown">
                     <div class="profile-icon">
@@ -324,8 +491,12 @@
     <div class="container">
         <div class="profile-container">
             <div class="profile-header">
-                <div class="profile-avatar">
-                    <i class="fas fa-user"></i>
+                <div class="profile-avatar" onclick="document.getElementById('profilePicInput').click()">
+                    <img id="profilePicDisplay" src="https://via.placeholder.com/150" alt="Profile Picture">
+                    <div class="profile-avatar-overlay">
+                        <i class="fas fa-camera"></i> Change Photo
+                    </div>
+                    <input type="file" id="profilePicInput" accept="image/*" onchange="handleProfilePicChange(event)">
                 </div>
                 <h1 class="profile-name" id="profileName">Loading...</h1>
                 <p class="profile-email" id="profileEmail">Loading...</p>
@@ -384,24 +555,6 @@
                 <button class="edit-button">Manage Settings</button>
             </div>
 
-            <div class="profile-section">
-                <h2 class="section-title">
-                    <i class="fas fa-farm"></i>
-                    Farm Information
-                </h2>
-                <div class="info-grid">
-                    <div class="info-item">
-                        <div class="info-label">Primary Location</div>
-                        <div class="info-value">Not Set</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Preferred Crops</div>
-                        <div class="info-value">Not Set</div>
-                    </div>
-                </div>
-                <button class="edit-button">Update Farm Info</button>
-            </div>
-
             <button class="logout-button" onclick="logout()">
                 <i class="fas fa-sign-out-alt"></i> Logout
             </button>
@@ -412,7 +565,62 @@
         <p>&copy; 2024 FarmWeather. All rights reserved.</p>
     </footer>
 
+    <div class="image-edit-modal" id="imageEditModal">
+        <div class="image-edit-container">
+            <h3 style="margin-bottom: 1rem;">Edit Profile Picture</h3>
+            <img id="imagePreview" class="image-preview">
+            <div class="slider-container">
+                <label>Brightness</label>
+                <input type="range" class="slider" id="brightnessSlider" min="0" max="200" value="100">
+            </div>
+            <div class="slider-container">
+                <label>Contrast</label>
+                <input type="range" class="slider" id="contrastSlider" min="0" max="200" value="100">
+            </div>
+            <div class="image-controls">
+                <button class="image-control-btn" onclick="rotateImage(-90)">
+                    <i class="fas fa-undo"></i> Rotate Left
+                </button>
+                <button class="image-control-btn" onclick="rotateImage(90)">
+                    <i class="fas fa-redo"></i> Rotate Right
+                </button>
+            </div>
+            <div class="button-group">
+                <button class="cancel-button" onclick="closeImageEditor()">Cancel</button>
+                <button class="save-button" onclick="saveEditedImage()">Save</button>
+            </div>
+        </div>
+    </div>
+
     <script>
+        // Function to update navigation based on auth status
+        function updateNavigation() {
+            const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            const authButtons = document.querySelector('.auth-buttons');
+            
+            if (currentUser) {
+                // User is logged in - show profile dropdown with picture
+                const profilePic = currentUser.profilePic || 'https://via.placeholder.com/40';
+                authButtons.innerHTML = `
+                    <div class="profile-dropdown">
+                        <div class="profile-icon" style="padding: 0; overflow: hidden;">
+                            <img src="${profilePic}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover;">
+                        </div>
+                        <div class="dropdown-content">
+                            <a href="profile.html"><i class="fas fa-user-circle"></i> Profile</a>
+                            <a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // Not logged in - show login/signup buttons
+                authButtons.innerHTML = `
+                    <a href="login.html" class="auth-btn login">Login</a>
+                    <a href="signup.html" class="auth-btn signup">Sign Up</a>
+                `;
+            }
+        }
+
         // Check if user is logged in
         window.onload = function() {
             const user = JSON.parse(localStorage.getItem('currentUser'));
@@ -428,6 +636,11 @@
             document.getElementById('lastName').textContent = user.lastName;
             document.getElementById('email').textContent = user.email;
             document.getElementById('memberSince').textContent = new Date().toLocaleDateString();
+
+            // Display profile picture if exists
+            if (user.profilePic) {
+                document.getElementById('profilePicDisplay').src = user.profilePic;
+            }
         }
 
         function logout() {
@@ -478,6 +691,128 @@
             
             // Hide form and show display
             cancelEdit('personalInfo');
+        }
+
+        let imageEditor = {
+            canvas: document.createElement('canvas'),
+            rotation: 0,
+            brightness: 100,
+            contrast: 100,
+            originalImage: null
+        };
+
+        function handleProfilePicChange(event) {
+            const file = event.target.files[0];
+            if (file) {
+                // Check file size and type
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('File size should be less than 5MB');
+                    return;
+                }
+                if (!file.type.startsWith('image/')) {
+                    alert('Please upload an image file');
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    // Load image for editing
+                    imageEditor.originalImage = new Image();
+                    imageEditor.originalImage.src = e.target.result;
+                    imageEditor.originalImage.onload = function() {
+                        document.getElementById('imagePreview').src = e.target.result;
+                        document.getElementById('imageEditModal').style.display = 'flex';
+                        initializeImageEditor();
+                    };
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function initializeImageEditor() {
+            imageEditor.rotation = 0;
+            imageEditor.brightness = 100;
+            imageEditor.contrast = 100;
+            
+            document.getElementById('brightnessSlider').value = 100;
+            document.getElementById('contrastSlider').value = 100;
+
+            document.getElementById('brightnessSlider').addEventListener('input', updateImage);
+            document.getElementById('contrastSlider').addEventListener('input', updateImage);
+        }
+
+        function rotateImage(degrees) {
+            imageEditor.rotation = (imageEditor.rotation + degrees) % 360;
+            updateImage();
+        }
+
+        function updateImage() {
+            const canvas = imageEditor.canvas;
+            const ctx = canvas.getContext('2d');
+            const img = imageEditor.originalImage;
+
+            // Set canvas size based on rotation
+            if (imageEditor.rotation % 180 === 0) {
+                canvas.width = img.width;
+                canvas.height = img.height;
+            } else {
+                canvas.width = img.height;
+                canvas.height = img.width;
+            }
+
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Apply rotation
+            ctx.save();
+            ctx.translate(canvas.width/2, canvas.height/2);
+            ctx.rotate(imageEditor.rotation * Math.PI/180);
+            ctx.drawImage(img, -img.width/2, -img.height/2);
+            ctx.restore();
+
+            // Apply brightness and contrast
+            imageEditor.brightness = document.getElementById('brightnessSlider').value;
+            imageEditor.contrast = document.getElementById('contrastSlider').value;
+
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+
+            for (let i = 0; i < data.length; i += 4) {
+                // Brightness
+                data[i] = data[i] * (imageEditor.brightness/100);
+                data[i+1] = data[i+1] * (imageEditor.brightness/100);
+                data[i+2] = data[i+2] * (imageEditor.brightness/100);
+
+                // Contrast
+                const factor = (259 * (imageEditor.contrast + 255)) / (255 * (259 - imageEditor.contrast));
+                data[i] = factor * (data[i] - 128) + 128;
+                data[i+1] = factor * (data[i+1] - 128) + 128;
+                data[i+2] = factor * (data[i+2] - 128) + 128;
+            }
+
+            ctx.putImageData(imageData, 0, 0);
+            document.getElementById('imagePreview').src = canvas.toDataURL('image/jpeg', 0.8);
+        }
+
+        function closeImageEditor() {
+            document.getElementById('imageEditModal').style.display = 'none';
+            document.getElementById('profilePicInput').value = '';
+        }
+
+        function saveEditedImage() {
+            const compressedImage = imageEditor.canvas.toDataURL('image/jpeg', 0.8);
+            document.getElementById('profilePicDisplay').src = compressedImage;
+            
+            // Save to localStorage
+            const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            currentUser.profilePic = compressedImage;
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+
+            // Update navigation
+            updateNavigation();
+            
+            // Close editor
+            closeImageEditor();
         }
     </script>
 </body>
