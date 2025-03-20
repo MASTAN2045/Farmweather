@@ -67,39 +67,55 @@ router.post('/login', [
         if (!errors.isEmpty()) {
             return res.status(400).json({ 
                 success: false,
+                message: 'Validation error',
                 errors: errors.array() 
             });
         }
 
         const { email, password } = req.body;
-        console.log('Login attempt for email:', email);
 
-        // Find user by email (case-insensitive)
-        const user = await User.findOne({ email: email.toLowerCase() });
-        if (!user) {
-            console.log('User not found:', email);
-            return res.status(400).json({ 
+        // Validate input presence
+        if (!email || !password) {
+            return res.status(400).json({
                 success: false,
-                message: 'Invalid credentials' 
+                message: 'Please provide both email and password'
+            });
+        }
+
+        // Trim and lowercase email
+        const normalizedEmail = email.trim().toLowerCase();
+        console.log('Login attempt for email:', normalizedEmail);
+
+        // Find user by email
+        const user = await User.findOne({ email: normalizedEmail });
+        if (!user) {
+            console.log('User not found:', normalizedEmail);
+            return res.status(401).json({ 
+                success: false,
+                message: 'Invalid email or password' 
             });
         }
 
         // Verify password
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            console.log('Invalid password for user:', email);
-            return res.status(400).json({ 
+            console.log('Invalid password for user:', normalizedEmail);
+            return res.status(401).json({ 
                 success: false,
-                message: 'Invalid credentials' 
+                message: 'Invalid email or password' 
             });
         }
 
         // Update last login
-        await user.updateLastLogin();
+        user.lastLogin = new Date();
+        await user.save();
 
         // Create JWT token
         const token = jwt.sign(
-            { id: user._id },
+            { 
+                id: user._id,
+                email: user.email 
+            },
             process.env.JWT_SECRET,
             { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
         );
@@ -107,6 +123,7 @@ router.post('/login', [
         // Send success response
         res.json({
             success: true,
+            message: 'Login successful',
             token,
             user: {
                 id: user._id,
@@ -116,12 +133,12 @@ router.post('/login', [
             }
         });
 
-        console.log('Successful login for user:', email);
+        console.log('Successful login for user:', normalizedEmail);
     } catch (err) {
         console.error('Login error:', err);
         res.status(500).json({ 
             success: false,
-            message: 'Server error during login',
+            message: 'An error occurred during login. Please try again.',
             error: process.env.NODE_ENV === 'development' ? err.message : undefined
         });
     }
