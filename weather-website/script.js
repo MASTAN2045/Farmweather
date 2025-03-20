@@ -3,15 +3,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const countrySelect = document.getElementById('countrySelect');
     const stateSelect = document.getElementById('stateSelect');
     const cityInput = document.getElementById('cityInput');
-    const searchButton = document.querySelector('.search-bar button');
-    const temperatureElement = document.getElementById('temperature');
-    const humidityElement = document.getElementById('humidity');
-    const rainfallElement = document.getElementById('rainfall');
-    const soilMoistureElement = document.getElementById('soil-moisture');
+    const searchButton = document.querySelector('.search-button');
+    const locationEl = document.querySelector('.weather-header h2');
+    const temperatureElement = document.querySelector('#temperature');
+    const humidityElement = document.querySelector('#humidity');
+    const windSpeedElement = document.querySelector('#windSpeed');
+    const rainfallElement = document.querySelector('#rainfall');
 
     // Country and State data
     const statesByCountry = {
-        'IN': [
+        'India': [
             'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
             'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka',
             'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram',
@@ -40,20 +41,154 @@ document.addEventListener('DOMContentLoaded', () => {
         ]
     };
 
-    // Sample agricultural weather data
-    const mockWeatherData = {
-        temperature: 28,
-        humidity: 65,
-        rainfall: 2.5,
-        soilMoisture: 45,
-        windSpeed: 12,
-        uvIndex: 6,
-        cropRecommendations: {
-            'Rice': 'Optimal conditions for rice cultivation. Consider irrigation in the next 2 days.',
-            'Wheat': 'Monitor soil moisture levels. Expected rainfall may affect harvest timing.',
-            'Cotton': 'High humidity levels detected. Watch for potential pest issues.'
+    // Initialize empty values
+    function clearWeatherDisplay() {
+        if (locationEl) locationEl.textContent = 'Location: --';
+        if (temperatureElement) temperatureElement.textContent = '--°C';
+        if (humidityElement) humidityElement.textContent = '--%';
+        if (windSpeedElement) windSpeedElement.textContent = '-- km/h';
+        if (rainfallElement) rainfallElement.textContent = '-- mm';
+    }
+
+    // Import API services
+    let weatherService;
+    import('./js/api.js')
+        .then(module => {
+            weatherService = module.weatherService;
+            console.log('Weather service loaded');
+        })
+        .catch(error => {
+            console.error('Error loading API module:', error);
+        });
+
+    // Handle country selection
+    if (countrySelect) {
+        countrySelect.addEventListener('change', () => {
+            const country = countrySelect.value;
+            stateSelect.innerHTML = '<option value="">Select State</option>';
+            stateSelect.disabled = !country;
+
+            if (country && statesByCountry[country]) {
+                statesByCountry[country].forEach(state => {
+                    const option = document.createElement('option');
+                    option.value = state;
+                    option.textContent = state;
+                    stateSelect.appendChild(option);
+                });
+            }
+            
+            // Clear weather when country changes
+            clearWeatherDisplay();
+        });
+    }
+
+    // Clear weather display when state changes
+    if (stateSelect) {
+        stateSelect.addEventListener('change', () => {
+            clearWeatherDisplay();
+        });
+    }
+
+    // Clear weather display when city changes
+    if (cityInput) {
+        cityInput.addEventListener('input', () => {
+            clearWeatherDisplay();
+        });
+    }
+
+    async function updateWeatherDisplay(data) {
+        try {
+            // Add animation class
+            const weatherItems = document.querySelectorAll('.weather-item');
+            weatherItems.forEach(item => {
+                item.style.opacity = '0';
+                item.style.transform = 'translateY(20px)';
+            });
+
+            // Extract data from API response
+            const temperature = data.current.temperature.current;
+            const humidity = data.current.humidity;
+            const windSpeed = data.current.wind.speed;
+            const locationName = `${data.location.name}, ${data.location.country}`;
+            
+            // Update location display
+            if (locationEl) {
+                locationEl.textContent = `Location: ${locationName}`;
+            }
+
+            // Update values with animation
+            setTimeout(() => {
+                if (temperatureElement) temperatureElement.textContent = `${temperature}°C`;
+                if (humidityElement) humidityElement.textContent = `${humidity}%`;
+                if (windSpeedElement) windSpeedElement.textContent = `${windSpeed} km/h`;
+                if (rainfallElement) rainfallElement.textContent = `0 mm`; // OpenWeather doesn't provide rainfall directly
+
+                weatherItems.forEach(item => {
+                    item.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                    item.style.opacity = '1';
+                    item.style.transform = 'translateY(0)';
+                });
+            }, 200);
+        } catch (error) {
+            console.error('Error updating weather display:', error);
+            alert('Error displaying weather data. Please try again.');
         }
-    };
+    }
+
+    async function handleSearch() {
+        const country = countrySelect ? countrySelect.value : '';
+        const state = stateSelect ? stateSelect.value : '';
+        const city = cityInput ? cityInput.value.trim() : '';
+
+        if (!country || !state || !city) {
+            alert('Please select country, state and enter city');
+            return;
+        }
+
+        // Show loading state
+        if (locationEl) locationEl.textContent = 'Loading...';
+        const weatherItems = document.querySelectorAll('.weather-item p');
+        weatherItems.forEach(item => {
+            item.textContent = 'Loading...';
+        });
+
+        try {
+            // Use weather service API
+            if (!weatherService) {
+                throw new Error('Weather service not loaded');
+            }
+            
+            console.log(`Fetching weather for ${city}, ${country}`);
+            const weatherData = await weatherService.getCurrentWeather(city, country);
+            
+            if (!weatherData || !weatherData.success) {
+                throw new Error('Failed to fetch weather data');
+            }
+            
+            console.log('Received weather data:', weatherData);
+            updateWeatherDisplay(weatherData);
+        } catch (error) {
+            console.error('Error fetching weather:', error);
+            alert('Error fetching weather data. Please try again later.');
+            clearWeatherDisplay();
+        }
+    }
+
+    // Event Listeners
+    if (searchButton) {
+        searchButton.addEventListener('click', handleSearch);
+    }
+    
+    if (cityInput) {
+        cityInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                handleSearch();
+            }
+        });
+    }
+
+    // Initialize with empty values
+    clearWeatherDisplay();
 
     // Navigation scroll effect
     window.addEventListener('scroll', () => {
@@ -64,102 +199,6 @@ document.addEventListener('DOMContentLoaded', () => {
             nav.style.background = 'rgba(46, 125, 50, 0.9)';
         }
     });
-
-    // Handle country selection
-    countrySelect.addEventListener('change', () => {
-        const country = countrySelect.value;
-        stateSelect.innerHTML = '<option value="">Select State</option>';
-        stateSelect.disabled = !country;
-
-        if (country && statesByCountry[country]) {
-            statesByCountry[country].forEach(state => {
-                const option = document.createElement('option');
-                option.value = state;
-                option.textContent = state;
-                stateSelect.appendChild(option);
-            });
-        }
-    });
-
-    function updateWeatherDisplay(data) {
-        // Add animation class
-        const weatherItems = document.querySelectorAll('.weather-item');
-        weatherItems.forEach(item => {
-            item.style.opacity = '0';
-            item.style.transform = 'translateY(20px)';
-        });
-
-        // Update values with animation
-        setTimeout(() => {
-            temperatureElement.textContent = `${data.temperature}°C`;
-            humidityElement.textContent = `${data.humidity}%`;
-            rainfallElement.textContent = `${data.rainfall} mm`;
-            soilMoistureElement.textContent = `${data.soilMoisture}%`;
-
-            // Add crop recommendations if container exists
-            const cropRecsContainer = document.getElementById('crop-recommendations');
-            if (cropRecsContainer) {
-                cropRecsContainer.innerHTML = '';
-                Object.entries(data.cropRecommendations).forEach(([crop, recommendation]) => {
-                    const recElement = document.createElement('div');
-                    recElement.className = 'crop-recommendation';
-                    recElement.innerHTML = `
-                        <h4>${crop}</h4>
-                        <p>${recommendation}</p>
-                    `;
-                    cropRecsContainer.appendChild(recElement);
-                });
-            }
-
-            weatherItems.forEach(item => {
-                item.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-                item.style.opacity = '1';
-                item.style.transform = 'translateY(0)';
-            });
-        }, 200);
-    }
-
-    function handleSearch() {
-        const country = countrySelect.value;
-        const state = stateSelect.value;
-        const city = cityInput.value.trim();
-
-        if (!country || !state || !city) {
-            alert('Please select country, state and enter city');
-            return;
-        }
-
-        // Show loading state
-        const weatherItems = document.querySelectorAll('.weather-item p');
-        weatherItems.forEach(item => {
-            item.textContent = 'Loading...';
-        });
-
-        // Simulate API call delay
-        setTimeout(() => {
-            // In a real application, you would make an API call here
-            // For demonstration, we'll add some randomization to mock data
-            const randomizedData = {
-                ...mockWeatherData,
-                temperature: mockWeatherData.temperature + (Math.random() * 4 - 2),
-                humidity: mockWeatherData.humidity + (Math.random() * 10 - 5),
-                rainfall: Math.max(0, mockWeatherData.rainfall + (Math.random() * 1 - 0.5)),
-                soilMoisture: Math.max(0, mockWeatherData.soilMoisture + (Math.random() * 10 - 5))
-            };
-            updateWeatherDisplay(randomizedData);
-        }, 1000);
-    }
-
-    // Event Listeners
-    searchButton.addEventListener('click', handleSearch);
-    cityInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            handleSearch();
-        }
-    });
-
-    // Initialize with mock data
-    updateWeatherDisplay(mockWeatherData);
 
     // Add animation for feature cards on scroll
     const observerOptions = {
