@@ -152,16 +152,40 @@
             padding: 1rem;
             border-radius: 10px;
             margin-bottom: 0.5rem;
+            white-space: pre-wrap;
+            word-wrap: break-word;
         }
 
         .user-message {
             background: #e8f5e9;
             align-self: flex-end;
+            border-bottom-right-radius: 4px;
         }
 
         .assistant-message {
             background: #f5f5f5;
             align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+
+        .assistant-message.error {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .typing {
+            background: #f5f5f5;
+            padding: 0.5rem 1rem;
+        }
+
+        .typing i {
+            animation: typing 1s infinite;
+        }
+
+        @keyframes typing {
+            0% { opacity: .2; }
+            20% { opacity: 1; }
+            100% { opacity: .2; }
         }
 
         .chat-input {
@@ -177,6 +201,16 @@
             border: 1px solid #ddd;
             border-radius: 8px;
             font-size: 1rem;
+            resize: none;
+            min-height: 40px;
+            max-height: 120px;
+            transition: all 0.3s ease;
+        }
+
+        .chat-input input:focus {
+            border-color: #2e7d32;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(46, 125, 50, 0.2);
         }
 
         .chat-input button {
@@ -193,11 +227,27 @@
             background: #1b5e20;
         }
 
+        .message a {
+            color: #2e7d32;
+            text-decoration: none;
+        }
+
+        .message a:hover {
+            text-decoration: underline;
+        }
+
         .quick-actions {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 1rem;
             margin-top: 2rem;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+
+        .quick-actions.hidden {
+            opacity: 0;
+            pointer-events: none;
         }
 
         .action-card {
@@ -231,6 +281,40 @@
                 display: none;
             }
         }
+
+        .error-message {
+            color: #721c24;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+        }
+
+        .connection-status {
+            margin-left: auto;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .connection-status.connected {
+            background: #4caf50;
+            color: white;
+        }
+
+        .connection-status.error {
+            background: #f44336;
+            color: white;
+        }
+
+        .connection-status.checking {
+            background: #ff9800;
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -262,6 +346,7 @@
                 <div class="chat-header">
                     <i class="fas fa-robot"></i>
                     <h2>Farm AI Assistant</h2>
+                    <div id="connection-status" class="connection-status">Checking connection...</div>
                 </div>
                 <div class="chat-messages" id="chatMessages">
                     <div class="message assistant-message">
@@ -304,60 +389,264 @@
     </footer>
 
     <script>
-        const chatMessages = document.getElementById('chatMessages');
-        const userInput = document.getElementById('userInput');
+        // Initialize DOM elements after document is loaded
+        let chatMessages;
+        let userInput;
+        let connectionStatus;
+        let isWaitingForResponse = false;
+        let chatHistory = [];
 
-        // Sample responses for demonstration
-        const responses = {
-            'weather': 'Based on current conditions, you should consider protecting your crops from high humidity. Monitor for fungal diseases and ensure proper ventilation.',
-            'irrigation': 'With the forecasted rainfall, reduce irrigation for the next 2-3 days. Focus on maintaining proper drainage to prevent waterlogging.',
-            'pests': 'Current warm and humid conditions may increase pest activity. Monitor for aphids and caterpillars. Consider preventive organic pest control measures.',
-            'crops': 'For this season, consider planting heat-resistant varieties. Rice, corn, and cotton would be suitable choices given the weather patterns.',
-            'default': 'I understand your concern about farming. Could you please provide more specific details about your crops and location so I can give better advice?'
-        };
+        // Initialize DOM elements
+        function initializeElements() {
+            chatMessages = document.getElementById('chatMessages');
+            userInput = document.getElementById('userInput');
+            connectionStatus = document.getElementById('connection-status');
+            
+            if (!chatMessages || !userInput || !connectionStatus) {
+                console.error('Required DOM elements not found');
+                return false;
+            }
+            return true;
+        }
 
-        function sendMessage() {
-            const message = userInput.value.trim();
-            if (message) {
-                // Add user message
-                addMessage(message, 'user');
-                
-                // Generate response
-                setTimeout(() => {
-                    const response = getResponse(message);
-                    addMessage(response, 'assistant');
-                }, 500);
-
-                userInput.value = '';
+        // Load chat history when page loads
+        async function loadChatHistory() {
+            if (!initializeElements()) return;
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/chat/history');
+                if (response.ok) {
+                    const history = await response.json();
+                    chatHistory = history;
+                    
+                    // Clear existing messages except the welcome message
+                    while (chatMessages.children.length > 1) {
+                        chatMessages.removeChild(chatMessages.lastChild);
+                    }
+                    
+                    // Add history messages
+                    history.reverse().forEach(chat => {
+                        displayMessage(chat.query, 'user');
+                        displayMessage(chat.response, 'assistant');
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading chat history:', error);
+                displayMessage('Failed to load chat history. Please try refreshing the page.', 'assistant error');
             }
         }
 
-        function askQuestion(question) {
-            userInput.value = question;
-            sendMessage();
+        // Function to check backend connection
+        async function checkBackendConnection() {
+            if (!initializeElements()) return false;
+            
+            try {
+                connectionStatus.className = 'connection-status checking';
+                connectionStatus.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking connection...';
+                
+                // Check backend health
+                const healthResponse = await fetch('http://localhost:5000/api/health');
+                if (!healthResponse.ok) throw new Error('Backend server not responding');
+                
+                // Test OpenAI connection with a simple message
+                const response = await fetch('http://localhost:5000/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        message: 'test connection',
+                        userContext: 'Connection test' 
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'error') {
+                    throw new Error(data.error);
+                }
+                
+                connectionStatus.className = 'connection-status connected';
+                connectionStatus.innerHTML = '<i class="fas fa-check-circle"></i> Connected';
+                
+                return true;
+            } catch (error) {
+                console.error('Connection error:', error);
+                connectionStatus.className = 'connection-status error';
+                connectionStatus.innerHTML = '<i class="fas fa-exclamation-circle"></i> Connection error';
+                
+                // Display error in chat if chatMessages exists
+                if (chatMessages) {
+                    displayMessage(`⚠️ Connection Error: ${error.message}. Please check if:
+1. The backend server is running (npm start)
+2. OpenAI API key is properly configured in .env file
+3. Your internet connection is stable`, 'assistant error');
+                }
+                
+                return false;
+            }
         }
 
-        function addMessage(text, sender) {
+        // Modify the existing sendMessage function
+        async function sendMessage() {
+            if (!initializeElements()) return;
+            
+            const input = document.querySelector('.chat-input input');
+            if (!input) {
+                console.error('Chat input not found');
+                return;
+            }
+            
+            const message = input.value.trim();
+            if (!message) return;
+            
+            // Clear input and disable
+            input.value = '';
+            input.disabled = true;
+            isWaitingForResponse = true;
+            
+            try {
+                // Check connection before sending
+                if (connectionStatus.className.includes('error')) {
+                    const isConnected = await checkBackendConnection();
+                    if (!isConnected) {
+                        throw new Error('Please check your connection before sending messages');
+                    }
+                }
+                
+                // Display user message
+                displayMessage(message, 'user');
+                
+                // Show typing indicator
+                const typingIndicator = document.createElement('div');
+                typingIndicator.className = 'message assistant-message typing';
+                typingIndicator.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
+                chatMessages.appendChild(typingIndicator);
+                
+                // Get user context from localStorage
+                const userContext = localStorage.getItem('farmContext') || '';
+                
+                // Send message to backend
+                const response = await fetch('http://localhost:5000/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message, userContext })
+                });
+                
+                // Remove typing indicator
+                if (typingIndicator.parentNode) {
+                    typingIndicator.remove();
+                }
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to get response');
+                }
+                
+                const data = await response.json();
+                
+                if (data.status === 'error') {
+                    throw new Error(data.error);
+                }
+                
+                // Display AI response
+                displayMessage(data.response, 'assistant');
+                
+            } catch (error) {
+                console.error('Error:', error);
+                // Display error message in chat
+                const errorMessage = `⚠️ ${error.message || 'An error occurred while getting the response. Please try again.'}`;
+                displayMessage(errorMessage, 'assistant error');
+                
+                // Update connection status if it's an API error
+                if (error.message.includes('API') || error.message.includes('connection')) {
+                    connectionStatus.className = 'connection-status error';
+                    connectionStatus.innerHTML = '<i class="fas fa-exclamation-circle"></i> Connection error';
+                }
+            } finally {
+                // Re-enable input
+                input.disabled = false;
+                input.focus();
+                isWaitingForResponse = false;
+            }
+        }
+
+        function displayMessage(message, type) {
+            if (!chatMessages) {
+                console.error('Chat messages container not found');
+                return;
+            }
+            
             const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${sender}-message`;
-            messageDiv.textContent = text;
+            messageDiv.className = `message ${type}-message`;
+            
+            // Format message content
+            let formattedMessage = message;
+            
+            // Convert URLs to clickable links
+            formattedMessage = formattedMessage.replace(
+                /(https?:\/\/[^\s]+)/g, 
+                '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
+            );
+            
+            // Format bullet points
+            formattedMessage = formattedMessage.replace(
+                /^[•*-]\s(.+)$/gm,
+                '<li>$1</li>'
+            );
+            if (formattedMessage.includes('<li>')) {
+                formattedMessage = '<ul>' + formattedMessage + '</ul>';
+            }
+            
+            // Add line breaks
+            formattedMessage = formattedMessage.replace(/\n/g, '<br>');
+            
+            messageDiv.innerHTML = formattedMessage;
             chatMessages.appendChild(messageDiv);
+            
+            // Scroll to bottom
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
-        function getResponse(message) {
-            message = message.toLowerCase();
-            if (message.includes('weather')) return responses.weather;
-            if (message.includes('irrigation') || message.includes('water')) return responses.irrigation;
-            if (message.includes('pest') || message.includes('disease')) return responses.pests;
-            if (message.includes('crop') || message.includes('plant')) return responses.crops;
-            return responses.default;
+        function askQuestion(question) {
+            if (!isWaitingForResponse && userInput) {
+                userInput.value = question;
+                sendMessage();
+            }
+        }
+
+        // Clear chat history
+        async function clearChatHistory() {
+            if (!initializeElements()) return;
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/chat/history', {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    // Clear all messages except the welcome message
+                    while (chatMessages.children.length > 1) {
+                        chatMessages.removeChild(chatMessages.lastChild);
+                    }
+                    chatHistory = [];
+                }
+            } catch (error) {
+                console.error('Error clearing chat history:', error);
+                displayMessage('Failed to clear chat history', 'assistant error');
+            }
         }
 
         // Enter key to send message
-        userInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                sendMessage();
+        document.addEventListener('DOMContentLoaded', () => {
+            const input = document.querySelector('.chat-input input');
+            if (input) {
+                input.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendMessage();
+                    }
+                });
             }
         });
 
@@ -366,11 +655,22 @@
             const currentUser = localStorage.getItem('currentUser');
             if (!currentUser) {
                 window.location.href = 'login.html';
+                return false;
             }
+            return true;
         }
 
-        // Check authentication on page load
-        window.addEventListener('load', checkAuth);
+        // Initialize everything when the page loads
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (checkAuth()) {
+                if (initializeElements()) {
+                    await loadChatHistory();
+                    await checkBackendConnection();
+                } else {
+                    console.error('Failed to initialize elements');
+                }
+            }
+        });
 
         // Add logout function
         function logout() {
