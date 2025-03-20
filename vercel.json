@@ -2,22 +2,25 @@
   "version": 2,
   "builds": [
     {
-      "src": "weather-website/**",
-      "use": "@vercel/static"
+      "src": "backend/app.py",
+      "use": "@vercel/python"
     },
     {
-      "src": "backend/**/*.js",
-      "use": "@vercel/node"
+      "src": "weather-website/**",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "backend/$1"
+      "dest": "backend/app.py"
     },
     {
       "src": "/(.*)",
       "dest": "weather-website/$1"
     }
-  ]
+  ],
+  "env": {
+    "PYTHONPATH": "."
+  }
 } 
