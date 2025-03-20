@@ -304,29 +304,28 @@
 
             <div class="current-weather">
                 <div class="weather-header">
-                    <h2>Current Weather</h2>
-                    <p id="location">Location: --</p>
+                    <h2 id="locationText">Location: --</h2>
                 </div>
                 <div class="weather-info">
                     <div class="weather-item">
                         <i class="fas fa-temperature-high"></i>
                         <h3>Temperature</h3>
-                        <p id="temperature">--°C</p>
+                        <p id="temperature" data-weather-value="temperature">--°C</p>
                     </div>
                     <div class="weather-item">
                         <i class="fas fa-tint"></i>
                         <h3>Humidity</h3>
-                        <p id="humidity">--%</p>
+                        <p id="humidity" data-weather-value="humidity">--%</p>
                     </div>
                     <div class="weather-item">
                         <i class="fas fa-wind"></i>
                         <h3>Wind Speed</h3>
-                        <p id="wind">-- km/h</p>
+                        <p id="windSpeed" data-weather-value="wind">-- km/h</p>
                     </div>
                     <div class="weather-item">
                         <i class="fas fa-cloud-rain"></i>
                         <h3>Rainfall</h3>
-                        <p id="rainfall">-- mm</p>
+                        <p id="rainfall" data-weather-value="rainfall">-- mm</p>
                     </div>
                 </div>
             </div>
@@ -444,7 +443,7 @@
             // Update current weather
             document.getElementById('temperature').textContent = `${data.current.temperature}°C`;
             document.getElementById('humidity').textContent = `${data.current.humidity}%`;
-            document.getElementById('wind').textContent = `${data.current.windSpeed} km/h`;
+            document.getElementById('windSpeed').textContent = `${data.current.windSpeed} km/h`;
             document.getElementById('rainfall').textContent = `${data.current.rainfall} mm`;
 
             // Update forecast
@@ -480,12 +479,9 @@
                 return;
             }
 
-            document.getElementById('location').textContent = `Location: ${city}, ${state}, ${country}`;
+            document.getElementById('locationText').textContent = `Location: ${city}, ${state}, ${country}`;
             updateWeatherDisplay(mockWeatherData);
         });
-
-        // Initialize with mock data
-        updateWeatherDisplay(mockWeatherData);
 
         // Authentication check
         function checkAuth() {
@@ -505,4 +501,4 @@
         }
     </script>
 </body>
-</html> 
+</html>
