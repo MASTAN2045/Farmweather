@@ -130,40 +130,54 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            // Update temperature
+            // Update temperature with actual temperature from API
             if (temperatureElement && data.current.temperature) {
                 const temp = data.current.temperature.current;
                 temperatureElement.textContent = `${Math.round(temp)}°C`;
+                temperatureElement.title = `Feels like: ${data.current.temperature.feels_like}°C`;
             }
             
-            // Update humidity
+            // Update humidity with actual humidity from API
             if (humidityElement && data.current.humidity) {
-                const humidity = data.current.humidity;
-                humidityElement.textContent = `${Math.round(humidity)}%`;
+                humidityElement.textContent = `${data.current.humidity}%`;
             }
             
-            // Update wind speed
+            // Update wind speed with actual wind data from API
             if (windSpeedElement && data.current.wind) {
-                const wind = data.current.wind.speed;
-                windSpeedElement.textContent = `${Math.round(wind)} km/h`;
+                const windSpeed = data.current.wind.speed;
+                const windDirection = data.current.wind.direction || '';
+                windSpeedElement.textContent = `${Math.round(windSpeed)} km/h ${windDirection}`;
             }
             
-            // Update rainfall if available
-            if (rainfallElement && data.current.rain) {
-                const rain = data.current.rain['1h'] || 0; // Get last hour rainfall
-                rainfallElement.textContent = `${rain} mm`;
-            } else if (rainfallElement) {
-                rainfallElement.textContent = '0 mm';
+            // Update weather description and icon if available
+            const weatherDescription = document.getElementById('weatherDescription');
+            if (weatherDescription && data.current.weather) {
+                weatherDescription.textContent = data.current.weather.description;
+                
+                // Update weather icon if available
+                const weatherIcon = document.getElementById('weatherIcon');
+                if (weatherIcon && data.current.weather.icon) {
+                    weatherIcon.src = data.current.weather.icon;
+                    weatherIcon.alt = data.current.weather.description;
+                }
             }
 
-            // Add weather description if available
-            if (data.current.weather && data.current.weather.description) {
-                console.log('Weather description:', data.current.weather.description);
+            // Update location with full details
+            if (locationEl && data.location) {
+                locationEl.textContent = `Location: ${data.location.name}, ${data.location.country}`;
             }
+
+            // Log successful update
+            console.log('Weather display updated successfully:', {
+                location: data.location?.name,
+                temp: data.current.temperature?.current,
+                humidity: data.current.humidity,
+                wind: data.current.wind?.speed
+            });
         } catch (error) {
             console.error('Error updating weather display:', error);
             clearWeatherDisplay();
-            alert('Error displaying weather data');
+            alert('Error displaying weather data. Please try again.');
         }
     }
 

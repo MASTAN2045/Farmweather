@@ -118,74 +118,44 @@ router.post('/login', [
             });
         }
 
-        // Normalize email (trim and lowercase)
+        // Normalize email
         const normalizedEmail = email.trim().toLowerCase();
         console.log('Login attempt for email:', normalizedEmail);
 
-        // Debug: List all users in DB
-        try {
-            const allUsers = await User.find({}, 'email username');
-            console.log('All registered users:', allUsers.map(u => ({ email: u.email, username: u.username })));
-        } catch (err) {
-            console.error('Error retrieving users list:', err);
-        }
-
-        // Find user by email - try multiple methods to be sure
-        let user = null;
+        // Find user by email
+        const user = await User.findOne({ email: normalizedEmail });
         
-        // Method 1: Use direct query
-        user = await User.findOne({ email: normalizedEmail });
-        
-        if (!user) {
-            // Method 2: Try the static method
-            user = await User.findByEmail(normalizedEmail);
-        }
-        
-        if (!user) {
-            // Method 3: Try case-insensitive query
-            user = await User.findOne({ email: { $regex: new RegExp('^' + normalizedEmail + '$', 'i') } });
-        }
-        
-        // Debug: Log authentication attempt details
-        console.log('Login attempt details:', {
-            emailInput: normalizedEmail,
-            userFound: !!user,
-            userId: user ? user._id : null
-        });
-
         if (!user) {
             console.log('User not found:', normalizedEmail);
-            return res.status(401).json({ 
+            return res.status(401).json({
                 success: false,
-                message: 'Invalid email or password' 
+                message: 'Invalid credentials'
             });
         }
 
-        console.log('User found:', user.email, user._id);
-
-        // Verify password
+        // Compare password
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
             console.log('Invalid password for user:', normalizedEmail);
-            return res.status(401).json({ 
+            return res.status(401).json({
                 success: false,
-                message: 'Invalid email or password' 
+                message: 'Invalid credentials'
             });
         }
 
-        // Update last login
-        user.lastLogin = new Date();
-        await user.save();
-
-        // Create JWT token
+        // Create and sign JWT token
         const token = jwt.sign(
             { 
                 id: user._id,
-                email: user.email 
+                email: user.email,
+                username: user.username
             },
             process.env.JWT_SECRET,
-            { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
+            { expiresIn: '24h' }
         );
+
+        // Log successful login
+        console.log('Successful login for user:', user.email);
 
         // Send success response
         res.json({
@@ -195,18 +165,16 @@ router.post('/login', [
             user: {
                 id: user._id,
                 username: user.username,
-                email: user.email,
-                favoriteCities: user.favoriteCities || []
+                email: user.email
             }
         });
 
-        console.log('Successful login for user:', normalizedEmail);
-    } catch (err) {
-        console.error('Login error:', err);
-        res.status(500).json({ 
+    } catch (error) {
+        console.error('Login error:', error);
+        res.status(500).json({
             success: false,
-            message: 'An error occurred during login. Please try again.',
-            error: process.env.NODE_ENV === 'development' ? err.message : undefined
+            message: 'Server error during login',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
 });
