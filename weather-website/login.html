@@ -228,22 +228,16 @@
         </div>
     </div>
 
+    <script src="js/auth.js"></script>
     <script>
         // Check if user is already logged in
         window.addEventListener('load', () => {
-            const currentUser = localStorage.getItem('currentUser');
-            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-            
-            if (currentUser && isLoggedIn) {
-                window.location.href = 'home.html';
-            } else {
-                // Clear any inconsistent state
-                localStorage.removeItem('currentUser');
-                localStorage.setItem('isLoggedIn', 'false');
+            if (AuthService.isAuthenticated()) {
+                window.location.href = 'index.html';
             }
         });
 
-        function handleLogin(event) {
+        async function handleLogin(event) {
             event.preventDefault();
             
             const email = document.getElementById('email').value.trim().toLowerCase();
@@ -267,27 +261,10 @@
             }
 
             try {
-                // Get users from localStorage
-                const users = JSON.parse(localStorage.getItem('users') || '[]');
-                
-                // Find matching user (case-insensitive email comparison)
-                const user = users.find(u => u.email.toLowerCase() === email && u.password === password);
-                
-                if (user) {
-                    // First set the user info
-                    localStorage.setItem('currentUser', JSON.stringify(user));
-                    // Then set login state
-                    localStorage.setItem('isLoggedIn', 'true');
-                    
-                    // Redirect to home page
-                    window.location.href = 'home.html';
-                } else {
-                    // Show error for invalid credentials
-                    document.getElementById('passwordError').textContent = 'Invalid email or password';
-                    document.getElementById('passwordError').style.display = 'block';
-                }
+                await AuthService.login(email, password);
+                window.location.href = 'index.html';
             } catch (error) {
-                document.getElementById('passwordError').textContent = 'Error during login. Please try again.';
+                document.getElementById('passwordError').textContent = error.message || 'Invalid email or password';
                 document.getElementById('passwordError').style.display = 'block';
             }
             return false;
