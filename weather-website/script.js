@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Country and State data
     const statesByCountry = {
-        'India': [
+        'IN': [
             'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
             'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka',
             'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram',
@@ -39,24 +39,6 @@ document.addEventListener('DOMContentLoaded', () => {
             'South Australia', 'Tasmania', 'Australian Capital Territory',
             'Northern Territory'
         ]
-    };
-
-    // Default weather data (for testing only - will be replaced by API data)
-    const mockWeatherData = {
-        current: {
-            temperature: {
-                current: 28
-            },
-            humidity: 65,
-            wind: {
-                speed: 12
-            }
-        },
-        location: {
-            name: 'Default City',
-            country: 'Default Country'
-        },
-        success: true
     };
 
     // Initialize empty values
@@ -105,43 +87,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Handle search button click
     if (searchButton) {
-        searchButton.addEventListener('click', () => {
-            const country = countrySelect ? countrySelect.value : 'India';
+        searchButton.addEventListener('click', async () => {
+            const country = countrySelect ? countrySelect.value : '';
             const state = stateSelect ? stateSelect.value : '';
             const city = cityInput ? cityInput.value.trim() : '';
             
-            if (!city) {
-                alert('Please enter a city name');
+            if (!country || !city) {
+                alert('Please select a country and enter a city name');
                 return;
             }
 
-            // For testing - update with mock data
-            // In production, this would make an API call
-            if (locationEl) {
-                locationEl.textContent = `Location: ${city}, ${state}, ${country}`;
+            try {
+                // Show loading state
+                clearWeatherDisplay();
+                locationEl.textContent = 'Loading...';
+                
+                // Fetch real-time weather data
+                const weatherData = await weatherService.getCurrentWeather(city, country);
+                
+                if (weatherData && weatherData.success) {
+                    // Update location display
+                    locationEl.textContent = `Location: ${city}, ${state}, ${country}`;
+                    
+                    // Update weather display with real data
+                    updateWeatherDisplay(weatherData);
+                } else {
+                    throw new Error('Failed to fetch weather data');
+                }
+            } catch (error) {
+                console.error('Error fetching weather:', error);
+                alert('Failed to fetch weather data. Please try again.');
+                clearWeatherDisplay();
             }
-            
-            // In a real app, we would fetch data from API here
-            // For now, simulate different values for different cities
-            const randomOffset = city.length % 10;
-            const citySpecificData = {
-                current: {
-                    temperature: {
-                        current: 22 + randomOffset
-                    },
-                    humidity: 50 + randomOffset,
-                    wind: {
-                        speed: 8 + (randomOffset / 2)
-                    }
-                },
-                location: {
-                    name: city,
-                    country: country
-                },
-                success: true
-            };
-            
-            updateWeatherDisplay(citySpecificData);
         });
     }
 
@@ -152,27 +129,41 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Update temperature
-        if (temperatureElement) {
-            const temp = data.current.temperature.current;
-            temperatureElement.textContent = `${Math.round(temp)}°C`;
-        }
-        
-        // Update humidity
-        if (humidityElement) {
-            const humidity = data.current.humidity;
-            humidityElement.textContent = `${Math.round(humidity)}%`;
-        }
-        
-        // Update wind speed
-        if (windSpeedElement) {
-            const wind = data.current.wind.speed;
-            windSpeedElement.textContent = `${Math.round(wind)} km/h`;
-        }
-        
-        // Update rainfall (usually 0 if not provided)
-        if (rainfallElement) {
-            rainfallElement.textContent = `0 mm`;
+        try {
+            // Update temperature
+            if (temperatureElement && data.current.temperature) {
+                const temp = data.current.temperature.current;
+                temperatureElement.textContent = `${Math.round(temp)}°C`;
+            }
+            
+            // Update humidity
+            if (humidityElement && data.current.humidity) {
+                const humidity = data.current.humidity;
+                humidityElement.textContent = `${Math.round(humidity)}%`;
+            }
+            
+            // Update wind speed
+            if (windSpeedElement && data.current.wind) {
+                const wind = data.current.wind.speed;
+                windSpeedElement.textContent = `${Math.round(wind)} km/h`;
+            }
+            
+            // Update rainfall if available
+            if (rainfallElement && data.current.rain) {
+                const rain = data.current.rain['1h'] || 0; // Get last hour rainfall
+                rainfallElement.textContent = `${rain} mm`;
+            } else if (rainfallElement) {
+                rainfallElement.textContent = '0 mm';
+            }
+
+            // Add weather description if available
+            if (data.current.weather && data.current.weather.description) {
+                console.log('Weather description:', data.current.weather.description);
+            }
+        } catch (error) {
+            console.error('Error updating weather display:', error);
+            clearWeatherDisplay();
+            alert('Error displaying weather data');
         }
     }
 
