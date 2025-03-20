@@ -25,9 +25,15 @@ const connectWithRetry = () => {
     mongoose.connect(mongoURI, {
         useNewUrlParser: true,
         useUnifiedTopology: true,
-        serverSelectionTimeoutMS: 5000,
+        serverSelectionTimeoutMS: 30000, // Timeout after 30 seconds
+        socketTimeoutMS: 45000, // Close sockets after 45 seconds
+        family: 4, // Use IPv4, skip trying IPv6
+        ssl: true,
+        sslValidate: true,
         retryWrites: true,
-        w: 'majority'
+        w: 'majority',
+        maxPoolSize: 10,
+        minPoolSize: 5
     })
     .then(() => {
         console.log('✅ MongoDB is connected');
@@ -49,11 +55,11 @@ mongoose.connection.on('error', err => {
 
 mongoose.connection.on('disconnected', () => {
     console.log('MongoDB disconnected, trying to reconnect...');
-    connectWithRetry();
+    setTimeout(connectWithRetry, 5000);
 });
 
 mongoose.connection.on('connected', () => {
-    console.log('MongoDB connected');
+    console.log('MongoDB connected successfully');
 });
 
 // CORS configuration
