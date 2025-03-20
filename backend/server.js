@@ -1,4 +1,7 @@
-require('dotenv').config();
+// Load environment variables based on NODE_ENV
+require('dotenv').config({
+    path: process.env.NODE_ENV === 'production' ? '.env.production' : '.env'
+});
 const express = require('express');
 const cors = require('cors');
 const fetch = require('node-fetch');
@@ -8,12 +11,18 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Set mongoose options
-mongoose.set('strictQuery', false); // Remove deprecation warning
+mongoose.set('strictQuery', false);
 
 // MongoDB Connection with retries
 const connectWithRetry = () => {
+    const mongoURI = process.env.MONGODB_URI;
+    if (!mongoURI) {
+        console.error('❌ MONGODB_URI is not defined in environment variables');
+        process.exit(1);
+    }
+
     console.log('MongoDB connection with retry');
-    mongoose.connect(process.env.MONGODB_URI, {
+    mongoose.connect(mongoURI, {
         useNewUrlParser: true,
         useUnifiedTopology: true,
         serverSelectionTimeoutMS: 5000,
@@ -22,6 +31,7 @@ const connectWithRetry = () => {
     })
     .then(() => {
         console.log('✅ MongoDB is connected');
+        console.log('Environment:', process.env.NODE_ENV);
     })
     .catch(err => {
         console.error('❌ MongoDB connection unsuccessful, retry after 5 seconds.', err);
@@ -47,8 +57,10 @@ mongoose.connection.on('connected', () => {
 });
 
 // CORS configuration
+const allowedOrigins = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : ['https://farmweather-frontend.vercel.app', 'http://localhost:3000'];
+
 const corsOptions = {
-    origin: ['https://farmweather-frontend.vercel.app', 'http://localhost:3000'],
+    origin: allowedOrigins,
     methods: ['GET', 'POST', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
@@ -64,6 +76,9 @@ app.use('/api/users', userRoutes);
 
 // OpenWeatherMap API configuration
 const OPENWEATHER_API_KEY = process.env.OPENWEATHER_API_KEY;
+if (!OPENWEATHER_API_KEY) {
+    console.error('❌ OPENWEATHER_API_KEY is not defined in environment variables');
+}
 const BASE_URL = "http://api.openweathermap.org/data/2.5/weather";
 
 // Health check endpoint
