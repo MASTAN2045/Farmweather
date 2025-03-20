@@ -12,21 +12,46 @@ router.post('/register', [
     check('password', 'Please enter a password with 6 or more characters').isLength({ min: 6 })
 ], async (req, res) => {
     try {
+        // Validate request
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            return res.status(400).json({ errors: errors.array() });
+            return res.status(400).json({ 
+                success: false,
+                message: 'Validation error',
+                errors: errors.array() 
+            });
         }
 
-        const { username, email, password } = req.body;
+        let { username, email, password } = req.body;
+        
+        // Normalize email (trim and lowercase)
+        email = email.trim().toLowerCase();
+        username = username.trim();
+        
+        console.log(`Registration attempt for email: ${email}, username: ${username}`);
 
-        // Check if user exists
-        let user = await User.findOne({ email });
-        if (user) {
-            return res.status(400).json({ message: 'User already exists' });
+        // Check if user exists by email
+        let existingUser = await User.findOne({ email });
+        if (existingUser) {
+            console.log('User with this email already exists:', email);
+            return res.status(400).json({ 
+                success: false,
+                message: 'Email is already registered' 
+            });
+        }
+
+        // Check if username is taken
+        existingUser = await User.findOne({ username });
+        if (existingUser) {
+            console.log('Username already taken:', username);
+            return res.status(400).json({ 
+                success: false,
+                message: 'Username is already taken' 
+            });
         }
 
         // Create new user
-        user = new User({
+        const user = new User({
             username,
             email,
             password
@@ -36,23 +61,34 @@ router.post('/register', [
         const salt = await bcrypt.genSalt(10);
         user.password = await bcrypt.hash(password, salt);
 
-        await user.save();
+        // Save user to database
+        const savedUser = await user.save();
+        console.log('New user created:', savedUser._id, email);
 
         // Create token
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-            expiresIn: '24h'
-        });
+        const token = jwt.sign(
+            { id: savedUser._id, email: savedUser.email },
+            process.env.JWT_SECRET,
+            { expiresIn: '24h' }
+        );
 
-        res.json({
+        res.status(201).json({
+            success: true,
+            message: 'User registered successfully',
             token,
             user: {
-                id: user._id,
-                username: user.username,
-                email: user.email
+                id: savedUser._id,
+                username: savedUser.username,
+                email: savedUser.email
             }
         });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error('Registration error:', err);
+        res.status(500).json({ 
+            success: false,
+            message: 'Server error during registration',
+            error: process.env.NODE_ENV === 'development' ? err.message : undefined
+        });
     }
 });
 
@@ -62,7 +98,7 @@ router.post('/login', [
     check('password', 'Password is required').exists()
 ], async (req, res) => {
     try {
-        // Validate request body
+        // Validate request
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(400).json({ 
@@ -82,12 +118,20 @@ router.post('/login', [
             });
         }
 
-        // Trim and lowercase email
+        // Normalize email (trim and lowercase)
         const normalizedEmail = email.trim().toLowerCase();
         console.log('Login attempt for email:', normalizedEmail);
 
         // Find user by email
         const user = await User.findOne({ email: normalizedEmail });
+        
+        // Debug: Log authentication attempt details
+        console.log('Login attempt details:', {
+            emailInput: normalizedEmail,
+            userFound: !!user,
+            userId: user ? user._id : null
+        });
+
         if (!user) {
             console.log('User not found:', normalizedEmail);
             return res.status(401).json({ 

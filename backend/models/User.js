@@ -41,7 +41,18 @@ const userSchema = new mongoose.Schema({
     }
 });
 
-// Create indexes
+// Pre-save middleware - ensure email is lowercase
+userSchema.pre('save', function(next) {
+    if (this.isModified('email')) {
+        this.email = this.email.trim().toLowerCase();
+    }
+    if (this.isModified('username')) {
+        this.username = this.username.trim();
+    }
+    next();
+});
+
+// Create indexes for faster lookups
 userSchema.index({ email: 1 }, { unique: true });
 userSchema.index({ username: 1 }, { unique: true });
 
@@ -54,6 +65,11 @@ userSchema.methods.updateLastLogin = function() {
 // Add a method to check if password needs to be hashed
 userSchema.methods.isPasswordHashed = function() {
     return this.password.length > 20; // Assuming bcrypt hash is longer than 20 chars
+};
+
+// Custom methods for finding users
+userSchema.statics.findByEmail = function(email) {
+    return this.findOne({ email: email.trim().toLowerCase() });
 };
 
 const User = mongoose.model('User', userSchema);
