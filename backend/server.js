@@ -99,15 +99,18 @@ app.get('/api/weather', async (req, res) => {
             });
         }
 
-        console.log(`Fetching weather data for ${city}, ${country}`);
+        console.log(`Fetching weather data for ${city}, ${country} at ${new Date().toISOString()}`);
 
         // Get coordinates first for more accurate results
-        const geoUrl = `http://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(city)},${encodeURIComponent(country)}&limit=1&appid=${apiKey}`;
+        const geoUrl = `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(city)},${encodeURIComponent(country)}&limit=1&appid=${apiKey}`;
         
         const geoResponse = await fetch(geoUrl, {
+            method: 'GET',
             headers: {
                 'Accept': 'application/json',
-                'Cache-Control': 'no-cache'
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache',
+                'Expires': '0'
             }
         });
         
@@ -135,9 +138,12 @@ app.get('/api/weather', async (req, res) => {
         const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`;
         
         const weatherResponse = await fetch(weatherUrl, {
+            method: 'GET',
             headers: {
                 'Accept': 'application/json',
-                'Cache-Control': 'no-cache'
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache',
+                'Expires': '0'
             }
         });
 
@@ -150,12 +156,14 @@ app.get('/api/weather', async (req, res) => {
         }
 
         const data = await weatherResponse.json();
+        console.log(`Raw weather data received for ${city}, ${country}:`, JSON.stringify(data).substring(0, 200) + '...');
 
         // Set cache control headers to prevent caching
         res.set({
             'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
             'Pragma': 'no-cache',
-            'Expires': '0'
+            'Expires': '0',
+            'Surrogate-Control': 'no-store'
         });
 
         const weatherData = {

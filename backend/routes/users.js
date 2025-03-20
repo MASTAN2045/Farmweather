@@ -122,8 +122,29 @@ router.post('/login', [
         const normalizedEmail = email.trim().toLowerCase();
         console.log('Login attempt for email:', normalizedEmail);
 
-        // Find user by email
-        const user = await User.findOne({ email: normalizedEmail });
+        // Debug: List all users in DB
+        try {
+            const allUsers = await User.find({}, 'email username');
+            console.log('All registered users:', allUsers.map(u => ({ email: u.email, username: u.username })));
+        } catch (err) {
+            console.error('Error retrieving users list:', err);
+        }
+
+        // Find user by email - try multiple methods to be sure
+        let user = null;
+        
+        // Method 1: Use direct query
+        user = await User.findOne({ email: normalizedEmail });
+        
+        if (!user) {
+            // Method 2: Try the static method
+            user = await User.findByEmail(normalizedEmail);
+        }
+        
+        if (!user) {
+            // Method 3: Try case-insensitive query
+            user = await User.findOne({ email: { $regex: new RegExp('^' + normalizedEmail + '$', 'i') } });
+        }
         
         // Debug: Log authentication attempt details
         console.log('Login attempt details:', {
@@ -139,6 +160,8 @@ router.post('/login', [
                 message: 'Invalid email or password' 
             });
         }
+
+        console.log('User found:', user.email, user._id);
 
         // Verify password
         const isMatch = await bcrypt.compare(password, user.password);
@@ -173,7 +196,7 @@ router.post('/login', [
                 id: user._id,
                 username: user.username,
                 email: user.email,
-                favoriteCities: user.favoriteCities
+                favoriteCities: user.favoriteCities || []
             }
         });
 
