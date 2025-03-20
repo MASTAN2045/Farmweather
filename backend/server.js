@@ -7,27 +7,43 @@ const mongoose = require('mongoose');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// MongoDB Connection with better error handling
-mongoose.connect(process.env.MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    serverSelectionTimeoutMS: 5000 // 5 second timeout
-})
-.then(() => {
-    console.log('✅ Connected to MongoDB successfully');
-})
-.catch(err => {
-    console.error('❌ MongoDB connection error:', err);
-    process.exit(1); // Exit if cannot connect to database
-});
+// Set mongoose options
+mongoose.set('strictQuery', false); // Remove deprecation warning
 
-// Handle MongoDB connection errors
+// MongoDB Connection with retries
+const connectWithRetry = () => {
+    console.log('MongoDB connection with retry');
+    mongoose.connect(process.env.MONGODB_URI, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+        serverSelectionTimeoutMS: 5000,
+        retryWrites: true,
+        w: 'majority'
+    })
+    .then(() => {
+        console.log('✅ MongoDB is connected');
+    })
+    .catch(err => {
+        console.error('❌ MongoDB connection unsuccessful, retry after 5 seconds.', err);
+        setTimeout(connectWithRetry, 5000);
+    });
+};
+
+// Initial connection
+connectWithRetry();
+
+// Handle MongoDB connection events
 mongoose.connection.on('error', err => {
     console.error('MongoDB connection error:', err);
 });
 
 mongoose.connection.on('disconnected', () => {
-    console.log('MongoDB disconnected');
+    console.log('MongoDB disconnected, trying to reconnect...');
+    connectWithRetry();
+});
+
+mongoose.connection.on('connected', () => {
+    console.log('MongoDB connected');
 });
 
 // CORS configuration
