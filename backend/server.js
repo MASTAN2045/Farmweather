@@ -99,28 +99,56 @@ app.get('/api/weather', async (req, res) => {
             });
         }
 
-        const url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)},${encodeURIComponent(country)}&appid=${apiKey}&units=metric`;
-        console.log('Fetching weather data from:', url);
+        // Get coordinates first for more accurate results
+        const geoUrl = `http://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(city)},${encodeURIComponent(country)}&limit=1&appid=${apiKey}`;
+        
+        const geoResponse = await fetch(geoUrl);
+        const geoData = await geoResponse.json();
 
-        const response = await fetch(url);
+        if (!geoData || geoData.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Location not found'
+            });
+        }
+
+        const { lat, lon } = geoData[0];
+
+        // Get detailed weather data using coordinates
+        const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`;
+        
+        const response = await fetch(weatherUrl);
         const data = await response.json();
 
         if (response.ok) {
-            // Format the weather data
             const weatherData = {
                 success: true,
                 location: {
                     city: data.name,
-                    country: data.sys.country
+                    country: data.sys.country,
+                    coordinates: { lat, lon }
                 },
                 weather: {
                     main: data.weather[0].main,
                     description: data.weather[0].description,
-                    icon: data.weather[0].icon,
-                    temperature: Math.round(data.main.temp),
-                    feels_like: Math.round(data.main.feels_like),
+                    icon: `https://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png`,
+                    temperature: {
+                        current: Math.round(data.main.temp),
+                        feels_like: Math.round(data.main.feels_like),
+                        min: Math.round(data.main.temp_min),
+                        max: Math.round(data.main.temp_max)
+                    },
                     humidity: data.main.humidity,
-                    wind_speed: data.wind.speed
+                    wind: {
+                        speed: data.wind.speed,
+                        deg: data.wind.deg,
+                        direction: getWindDirection(data.wind.deg)
+                    },
+                    pressure: data.main.pressure,
+                    clouds: data.clouds.all,
+                    visibility: data.visibility,
+                    sunrise: new Date(data.sys.sunrise * 1000).toISOString(),
+                    sunset: new Date(data.sys.sunset * 1000).toISOString()
                 },
                 timestamp: new Date()
             };
@@ -131,7 +159,8 @@ app.get('/api/weather', async (req, res) => {
             console.error('OpenWeatherMap API error:', data);
             res.status(response.status).json({
                 success: false,
-                message: data.message || 'Error fetching weather data'
+                message: data.message || 'Error fetching weather data',
+                code: data.cod
             });
         }
     } catch (error) {
@@ -143,6 +172,14 @@ app.get('/api/weather', async (req, res) => {
         });
     }
 });
+
+// Helper function to convert wind degrees to cardinal directions
+function getWindDirection(degrees) {
+    const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE',
+                       'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+    const index = Math.round(((degrees %= 360) < 0 ? degrees + 360 : degrees) / 22.5) % 16;
+    return directions[index];
+}
 
 // Root route with API documentation
 app.get('/', (req, res) => {

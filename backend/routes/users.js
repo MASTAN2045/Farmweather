@@ -57,35 +57,73 @@ router.post('/register', [
 });
 
 // Login User
-router.post('/login', async (req, res) => {
+router.post('/login', [
+    check('email', 'Please include a valid email').isEmail(),
+    check('password', 'Password is required').exists()
+], async (req, res) => {
     try {
-        const { email, password } = req.body;
-
-        // Validate
-        const user = await User.findOne({ email });
-        if (!user) {
-            return res.status(400).json({ message: 'User does not exist' });
+        // Validate request body
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ 
+                success: false,
+                errors: errors.array() 
+            });
         }
 
+        const { email, password } = req.body;
+        console.log('Login attempt for email:', email);
+
+        // Find user by email (case-insensitive)
+        const user = await User.findOne({ email: email.toLowerCase() });
+        if (!user) {
+            console.log('User not found:', email);
+            return res.status(400).json({ 
+                success: false,
+                message: 'Invalid credentials' 
+            });
+        }
+
+        // Verify password
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            return res.status(400).json({ message: 'Invalid credentials' });
+            console.log('Invalid password for user:', email);
+            return res.status(400).json({ 
+                success: false,
+                message: 'Invalid credentials' 
+            });
         }
 
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-            expiresIn: '24h'
-        });
+        // Update last login
+        await user.updateLastLogin();
 
+        // Create JWT token
+        const token = jwt.sign(
+            { id: user._id },
+            process.env.JWT_SECRET,
+            { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
+        );
+
+        // Send success response
         res.json({
+            success: true,
             token,
             user: {
                 id: user._id,
                 username: user.username,
-                email: user.email
+                email: user.email,
+                favoriteCities: user.favoriteCities
             }
         });
+
+        console.log('Successful login for user:', email);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error('Login error:', err);
+        res.status(500).json({ 
+            success: false,
+            message: 'Server error during login',
+            error: process.env.NODE_ENV === 'development' ? err.message : undefined
+        });
     }
 });
 
