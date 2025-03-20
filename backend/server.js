@@ -9,6 +9,7 @@ const mongoose = require('mongoose');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const HOST = process.env.HOST || '0.0.0.0'; // Add host binding for Render
 
 // Set mongoose options
 mongoose.set('strictQuery', false);
@@ -25,9 +26,9 @@ const connectWithRetry = () => {
     mongoose.connect(mongoURI, {
         useNewUrlParser: true,
         useUnifiedTopology: true,
-        serverSelectionTimeoutMS: 30000, // Timeout after 30 seconds
-        socketTimeoutMS: 45000, // Close sockets after 45 seconds
-        family: 4, // Use IPv4, skip trying IPv6
+        serverSelectionTimeoutMS: 30000,
+        socketTimeoutMS: 45000,
+        family: 4,
         ssl: true,
         sslValidate: true,
         retryWrites: true,
@@ -38,6 +39,7 @@ const connectWithRetry = () => {
     .then(() => {
         console.log('✅ MongoDB is connected');
         console.log('Environment:', process.env.NODE_ENV);
+        startServer(); // Only start server after successful DB connection
     })
     .catch(err => {
         console.error('❌ MongoDB connection unsuccessful, retry after 5 seconds.', err);
@@ -45,34 +47,25 @@ const connectWithRetry = () => {
     });
 };
 
-// Initial connection
-connectWithRetry();
-
-// Handle MongoDB connection events
-mongoose.connection.on('error', err => {
-    console.error('MongoDB connection error:', err);
-});
-
-mongoose.connection.on('disconnected', () => {
-    console.log('MongoDB disconnected, trying to reconnect...');
-    setTimeout(connectWithRetry, 5000);
-});
-
-mongoose.connection.on('connected', () => {
-    console.log('MongoDB connected successfully');
-});
-
 // CORS configuration
 const corsOptions = {
     origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : ['https://farmweather-frontend.vercel.app', 'http://localhost:3000'],
     methods: ['GET', 'POST', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true
+    credentials: true,
+    optionsSuccessStatus: 200 // For legacy browser support
 };
 
 // Middleware
 app.use(cors(corsOptions));
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Add request logging middleware
+app.use((req, res, next) => {
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+    next();
+});
 
 // Routes
 const userRoutes = require('./routes/users');
@@ -256,17 +249,17 @@ app.get('/api/health', (req, res) => {
     res.json(healthcheck);
 });
 
-// Error handling middleware
+// Error handling middleware (move this before the 404 handler)
 app.use((err, req, res, next) => {
     console.error('Server Error:', err);
     res.status(500).json({ 
         success: false,
         message: 'Internal server error', 
-        error: err.message 
+        error: process.env.NODE_ENV === 'development' ? err.message : 'An unexpected error occurred'
     });
 });
 
-// Handle unhandled routes
+// Handle unhandled routes (404 handler)
 app.use('*', (req, res) => {
     res.status(404).json({ 
         success: false,
@@ -279,7 +272,33 @@ app.use('*', (req, res) => {
     });
 });
 
-// Start server
-app.listen(PORT, () => {
-    console.log(`✅ Server is running on port ${PORT}`);
-}); 
+// Function to start the server
+function startServer() {
+    const server = app.listen(PORT, HOST, () => {
+        console.log(`✅ Server is running on http://${HOST}:${PORT}`);
+    });
+
+    // Handle server errors
+    server.on('error', (error) => {
+        console.error('Server error:', error);
+        if (error.code === 'EADDRINUSE') {
+            console.error(`Port ${PORT} is already in use`);
+            process.exit(1);
+        }
+    });
+
+    // Handle process termination
+    process.on('SIGTERM', () => {
+        console.log('Received SIGTERM. Performing graceful shutdown...');
+        server.close(() => {
+            console.log('Server closed. Disconnecting from MongoDB...');
+            mongoose.connection.close(false, () => {
+                console.log('MongoDB connection closed. Process terminating...');
+                process.exit(0);
+            });
+        });
+    });
+}
+
+// Initial connection
+connectWithRetry(); 
