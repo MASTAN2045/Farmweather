@@ -81,8 +81,10 @@ app.use('/api/users', userRoutes);
 // Weather API endpoint
 app.get('/api/weather', async (req, res) => {
     try {
+        // Get query parameters
         const { city, country } = req.query;
         
+        // Validate required parameters
         if (!city || !country) {
             return res.status(400).json({ 
                 success: false,
@@ -90,6 +92,7 @@ app.get('/api/weather', async (req, res) => {
             });
         }
 
+        // Get API key from environment
         const apiKey = process.env.OPENWEATHER_API_KEY;
         if (!apiKey) {
             console.error('OpenWeatherMap API key is not configured');
@@ -99,110 +102,117 @@ app.get('/api/weather', async (req, res) => {
             });
         }
 
-        console.log(`Fetching weather data for ${city}, ${country} at ${new Date().toISOString()}`);
+        console.log(`[${new Date().toISOString()}] Weather request for: ${city}, ${country}`);
 
-        // Get coordinates first for more accurate results
-        const geoUrl = `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(city)},${encodeURIComponent(country)}&limit=1&appid=${apiKey}`;
-        
-        const geoResponse = await fetch(geoUrl, {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-                'Cache-Control': 'no-cache, no-store, must-revalidate',
+        try {
+            // Step 1: Get geocoding data
+            const geoUrl = `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(city)},${encodeURIComponent(country)}&limit=1&appid=${apiKey}`;
+            console.log('Geocoding URL:', geoUrl);
+            
+            const geoResponse = await fetch(geoUrl);
+            if (!geoResponse.ok) {
+                const errorText = await geoResponse.text();
+                console.error('Geocoding API error:', errorText);
+                return res.status(geoResponse.status).json({
+                    success: false,
+                    message: `Geocoding API error: ${errorText}`
+                });
+            }
+            
+            const geoData = await geoResponse.json();
+            console.log('Geocoding response:', JSON.stringify(geoData));
+            
+            if (!geoData || geoData.length === 0) {
+                return res.status(404).json({
+                    success: false,
+                    message: `Location not found: ${city}, ${country}`
+                });
+            }
+            
+            // Extract coordinates
+            const { lat, lon, name, country: countryCode } = geoData[0];
+            console.log(`Found coordinates: ${lat}, ${lon} for ${name}, ${countryCode}`);
+            
+            // Step 2: Get current weather data
+            const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`;
+            console.log('Weather URL:', weatherUrl);
+            
+            const weatherResponse = await fetch(weatherUrl);
+            if (!weatherResponse.ok) {
+                const errorText = await weatherResponse.text();
+                console.error('Weather API error:', errorText);
+                return res.status(weatherResponse.status).json({
+                    success: false,
+                    message: `Weather API error: ${errorText}`
+                });
+            }
+            
+            const weatherData = await weatherResponse.json();
+            console.log('Weather response raw data:', JSON.stringify(weatherData).substring(0, 100) + '...');
+            
+            // Format and send response
+            // Set cache control headers
+            res.set({
+                'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
                 'Pragma': 'no-cache',
                 'Expires': '0'
-            }
-        });
-        
-        if (!geoResponse.ok) {
-            console.error('Geocoding API error:', await geoResponse.text());
-            return res.status(geoResponse.status).json({
-                success: false,
-                message: 'Error finding location coordinates'
             });
-        }
-
-        const geoData = await geoResponse.json();
-
-        if (!geoData || geoData.length === 0) {
-            return res.status(404).json({
-                success: false,
-                message: `Location not found: ${city}, ${country}`
-            });
-        }
-
-        const { lat, lon } = geoData[0];
-        console.log(`Found coordinates for ${city}, ${country}: lat=${lat}, lon=${lon}`);
-
-        // Get detailed weather data using coordinates
-        const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`;
-        
-        const weatherResponse = await fetch(weatherUrl, {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-                'Cache-Control': 'no-cache, no-store, must-revalidate',
-                'Pragma': 'no-cache',
-                'Expires': '0'
-            }
-        });
-
-        if (!weatherResponse.ok) {
-            console.error('Weather API error:', await weatherResponse.text());
-            return res.status(weatherResponse.status).json({
-                success: false,
-                message: 'Error fetching weather data'
-            });
-        }
-
-        const data = await weatherResponse.json();
-        console.log(`Raw weather data received for ${city}, ${country}:`, JSON.stringify(data).substring(0, 200) + '...');
-
-        // Set cache control headers to prevent caching
-        res.set({
-            'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-            'Pragma': 'no-cache',
-            'Expires': '0',
-            'Surrogate-Control': 'no-store'
-        });
-
-        const weatherData = {
-            success: true,
-            location: {
-                city: data.name,
-                country: data.sys.country,
-                coordinates: { lat, lon }
-            },
-            weather: {
-                main: data.weather[0].main,
-                description: data.weather[0].description,
-                icon: `https://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png`,
-                temperature: {
-                    current: Math.round(data.main.temp),
-                    feels_like: Math.round(data.main.feels_like),
-                    min: Math.round(data.main.temp_min),
-                    max: Math.round(data.main.temp_max)
+            
+            // Format response data
+            const response = {
+                success: true,
+                timestamp: new Date().toISOString(),
+                location: {
+                    name: weatherData.name,
+                    country: weatherData.sys.country,
+                    coordinates: {
+                        lat: weatherData.coord.lat,
+                        lon: weatherData.coord.lon
+                    }
                 },
-                humidity: data.main.humidity,
-                wind: {
-                    speed: data.wind.speed,
-                    deg: data.wind.deg,
-                    direction: getWindDirection(data.wind.deg)
-                },
-                pressure: data.main.pressure,
-                clouds: data.clouds.all,
-                visibility: data.visibility,
-                sunrise: new Date(data.sys.sunrise * 1000).toISOString(),
-                sunset: new Date(data.sys.sunset * 1000).toISOString()
-            },
-            timestamp: new Date().toISOString()
-        };
-        
-        console.log(`Successfully fetched weather data for ${city}, ${country}`);
-        res.json(weatherData);
+                current: {
+                    weather: {
+                        main: weatherData.weather[0].main,
+                        description: weatherData.weather[0].description,
+                        icon: `https://openweathermap.org/img/wn/${weatherData.weather[0].icon}@2x.png`
+                    },
+                    temperature: {
+                        current: Math.round(weatherData.main.temp),
+                        feels_like: Math.round(weatherData.main.feels_like),
+                        min: Math.round(weatherData.main.temp_min),
+                        max: Math.round(weatherData.main.temp_max)
+                    },
+                    humidity: weatherData.main.humidity,
+                    pressure: weatherData.main.pressure,
+                    wind: {
+                        speed: weatherData.wind.speed,
+                        deg: weatherData.wind.deg,
+                        direction: getWindDirection(weatherData.wind.deg)
+                    },
+                    clouds: weatherData.clouds.all,
+                    visibility: weatherData.visibility / 1000, // Convert to km
+                    sunrise: new Date(weatherData.sys.sunrise * 1000).toISOString(),
+                    sunset: new Date(weatherData.sys.sunset * 1000).toISOString()
+                }
+            };
+            
+            // Log success
+            console.log(`Weather data successfully retrieved for ${city}, ${country}`);
+            
+            // Send response
+            return res.json(response);
+            
+        } catch (apiError) {
+            console.error('OpenWeatherMap API error:', apiError);
+            return res.status(500).json({
+                success: false,
+                message: 'Error communicating with weather service',
+                error: apiError.message
+            });
+        }
     } catch (error) {
-        console.error('Weather API Error:', error);
-        res.status(500).json({ 
+        console.error('Weather API error:', error);
+        return res.status(500).json({ 
             success: false,
             message: 'Internal server error while fetching weather data',
             error: error.message 

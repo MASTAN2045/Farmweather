@@ -31,14 +31,28 @@ export const weatherService = {
                     headers: getHeaders(),
                 }
             );
-            const data = await response.json();
             
+            // Handle non-OK responses
             if (!response.ok) {
-                console.error('Weather fetch error:', data);
-                throw new Error(data.message || 'Failed to fetch weather data');
+                const errorData = await response.json();
+                console.error('Weather fetch error:', errorData);
+                throw new Error(errorData.message || 'Failed to fetch weather data');
             }
             
-            console.log(`Weather data received for ${city}, ${country}:`, data.success);
+            const data = await response.json();
+            
+            // Validate data structure
+            if (!data || !data.success || !data.current) {
+                console.error('Invalid weather data structure:', data);
+                throw new Error('Received invalid weather data format');
+            }
+            
+            console.log(`Weather data received for ${city}, ${country}:`, 
+                data.current.temperature.current + '°C, ' +
+                data.current.humidity + '% humidity, ' +
+                data.current.weather.description
+            );
+            
             return data;
         } catch (error) {
             console.error('Error fetching weather:', error);
@@ -58,12 +72,15 @@ export const weatherService = {
                     headers: getHeaders(),
                 }
             );
-            const data = await response.json();
             
+            // Handle non-OK responses
             if (!response.ok) {
-                console.error('Forecast fetch error:', data);
-                throw new Error(data.message || 'Failed to fetch forecast data');
+                const errorData = await response.json();
+                console.error('Forecast fetch error:', errorData);
+                throw new Error(errorData.message || 'Failed to fetch forecast data');
             }
+            
+            const data = await response.json();
             
             return data;
         } catch (error) {
@@ -74,16 +91,20 @@ export const weatherService = {
 
     async checkHealth() {
         try {
-            const response = await fetch(`${API_BASE_URL}/health?_=${Date.now()}`, {
+            const timestamp = Date.now();
+            const response = await fetch(`${API_BASE_URL}/health?_=${timestamp}`, {
                 method: 'GET',
                 headers: getHeaders(),
             });
-            const data = await response.json();
             
             if (!response.ok) {
-                console.error('Health check failed:', data);
-                throw new Error(data.message || 'Backend service is not healthy');
+                const errorData = await response.json();
+                console.error('Health check failed:', errorData);
+                throw new Error(errorData.message || 'Backend service is not healthy');
             }
+            
+            const data = await response.json();
+            console.log('Health check successful:', data);
             
             return data;
         } catch (error) {
