@@ -1,10 +1,7 @@
 from http.server import BaseHTTPRequestHandler
 import requests
 import os
-from dotenv import load_dotenv
 import json
-
-load_dotenv()
 
 OPENWEATHER_API_KEY = os.getenv('OPENWEATHER_API_KEY')
 BASE_URL = "http://api.openweathermap.org/data/2.5/weather"
@@ -21,7 +18,7 @@ def get_weather(city, country):
         data = response.json()
         
         if response.status_code == 200:
-            weather_data = {
+            return {
                 'temperature': round(data['main']['temp']),
                 'humidity': data['main']['humidity'],
                 'description': data['weather'][0]['description'],
@@ -29,9 +26,7 @@ def get_weather(city, country):
                 'city': data['name'],
                 'country': data['sys']['country']
             }
-            return weather_data
-        else:
-            return {"error": "Failed to fetch weather data"}, response.status_code
+        return {"error": "Failed to fetch weather data"}, response.status_code
             
     except Exception as e:
         return {"error": str(e)}, 500
@@ -56,7 +51,6 @@ class handler(BaseHTTPRequestHandler):
             
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
-            self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
             self.wfile.write(json.dumps(result).encode())
             

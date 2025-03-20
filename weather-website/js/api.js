@@ -1,4 +1,5 @@
-const API_BASE_URL = '/api';
+// Replace this with your Render backend URL after deployment
+const API_BASE_URL = 'https://farmweather-backend.onrender.com/api';
 
 export const weatherService = {
     async getCurrentWeather(city, country) {
