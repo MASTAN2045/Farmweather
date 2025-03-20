@@ -2,15 +2,24 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const fetch = require('node-fetch');
+const mongoose = require('mongoose');
 
 const app = express();
-const port = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3000;
+
+// MongoDB Connection
+mongoose.connect(process.env.MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+})
+.then(() => console.log('Connected to MongoDB'))
+.catch(err => console.error('MongoDB connection error:', err));
 
 // CORS configuration
 const corsOptions = {
     origin: ['https://farmweather-frontend.vercel.app', 'http://localhost:3000'],
     methods: ['GET', 'POST'],
-    allowedHeaders: ['Content-Type'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
 };
 
@@ -92,7 +101,7 @@ app.use((err, req, res, next) => {
 });
 
 // Start server
-app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
     console.log(`OpenWeatherMap API key configured: ${!!OPENWEATHER_API_KEY}`);
 }); 
